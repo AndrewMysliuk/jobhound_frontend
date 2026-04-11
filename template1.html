@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <script>
+      window.FontAwesomeConfig = {
+        autoReplaceSvg: "nest",
+      }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Slot Detail</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Inter", "sans-serif"],
+            },
+            colors: {
+              page: "#FAFAFA",
+              primary: "#18181B",
+              secondary: "#71717A",
+              border: "#E4E4E7",
+              link: "#52525B",
+              linkHover: "#18181B",
+              headerBg: "#FFFFFF",
+              btnPrimary: "#2563EB",
+              btnText: "#FFFFFF",
+              tableHeaderBg: "#FAFAFA",
+              rowHover: "#F4F4F5",
+            },
+          },
+        },
+      }
+    </script>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #fafafa;
+        font-family: "Inter", sans-serif;
+        min-height: 100vh;
+      }
+      .tab-indicator {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background-color: #2563eb;
+      }
+      .table-row {
+        cursor: pointer;
+      }
+      .table-row:hover {
+        background-color: #f4f4f5;
+      }
+    </style>
+  </head>
+  <body>
+    <header id="header" class="w-full bg-headerBg border-b border-border h-16 flex items-center justify-between px-6 lg:px-8">
+      <div class="flex items-center">
+        <span class="text-primary font-semibold text-xl tracking-tight">JobHound</span>
+      </div>
+      <nav class="flex items-center">
+        <a href="#" class="text-link hover:text-linkHover text-sm font-medium transition-colors duration-200">Profile</a>
+      </nav>
+    </header>
+
+    <main id="main-content" class="w-full px-4 sm:px-6 lg:px-8 py-8">
+      <div id="slot-detail-container" class="w-full max-w-[1200px] mx-auto">
+        <div id="breadcrumb-section" class="mb-6">
+          <a href="#" class="text-link hover:text-linkHover text-sm font-medium transition-colors duration-200">← Searches</a>
+        </div>
+
+        <div id="slot-header-section" class="mb-8">
+          <h1 id="slot-title" class="text-primary text-3xl lg:text-4xl font-semibold tracking-tight mb-6">frontend</h1>
+
+          <div id="tabs-container" class="border-b border-border">
+            <nav class="flex space-x-8" aria-label="Tabs">
+              <button id="tab-stage1" class="relative pb-4 px-1 text-sm font-medium text-btnPrimary transition-colors duration-200">
+                Stage 1
+                <span class="tab-indicator"></span>
+              </button>
+              <button id="tab-stage2" class="pb-4 px-1 text-sm font-medium text-link hover:text-linkHover transition-colors duration-200">Stage 2</button>
+              <button id="tab-stage3" class="pb-4 px-1 text-sm font-medium text-link hover:text-linkHover transition-colors duration-200">Stage 3</button>
+            </nav>
+          </div>
+        </div>
+
+        <div id="table-section" class="bg-white border border-border rounded-lg overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead>
+                <tr class="bg-tableHeaderBg border-b border-border">
+                  <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Title</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Company</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Source ID</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">First Seen At</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Posted At</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-border">
+                <tr class="table-row">
+                  <td class="px-6 py-4 text-sm text-primary font-medium">Senior Frontend Engineer</td>
+                  <td class="px-6 py-4 text-sm text-primary">TechCorp Inc</td>
+                  <td class="px-6 py-4 text-sm text-primary font-mono">gh_12847562</td>
+                  <td class="px-6 py-4 text-sm text-primary">2024-01-15 14:23:11</td>
+                  <td class="px-6 py-4 text-sm text-primary">2024-01-15 09:00:00</td>
+                </tr>
+                <tr class="table-row">
+                  <td class="px-6 py-4 text-sm text-primary font-medium">Frontend Developer - React</td>
+                  <td class="px-6 py-4 text-sm text-primary">StartupXYZ</td>
+                  <td class="px-6 py-4 text-sm text-primary font-mono">li_98234512</td>
+                  <td class="px-6 py-4 text-sm text-primary">2024-01-15 13:45:22</td>
+                  <td class="px-6 py-4 text-sm text-secondary">—</td>
+                </tr>
+                <tr class="table-row">
+                  <td class="px-6 py-4 text-sm text-primary font-medium">UI Engineer</td>
+                  <td class="px-6 py-4 text-sm text-primary">Design Systems Co</td>
+                  <td class="px-6 py-4 text-sm text-primary font-mono">so_45612378</td>
+                  <td class="px-6 py-4 text-sm text-primary">2024-01-15 12:10:33</td>
+                  <td class="px-6 py-4 text-sm text-primary">2024-01-14 16:30:00</td>
+                </tr>
+                <tr class="table-row">
+                  <td class="px-6 py-4 text-sm text-primary font-medium">Frontend Architect</td>
+                  <td class="px-6 py-4 text-sm text-primary">Enterprise Solutions Ltd</td>
+                  <td class="px-6 py-4 text-sm text-primary font-mono">gh_78945123</td>
+                  <td class="px-6 py-4 text-sm text-primary">2024-01-15 11:22:45</td>
+                  <td class="px-6 py-4 text-sm text-primary">2024-01-14 10:15:00</td>
+                </tr>
+                <tr class="table-row">
+                  <td class="px-6 py-4 text-sm text-primary font-medium">Web Developer (Frontend Focus)</td>
+                  <td class="px-6 py-4 text-sm text-primary">MediaTech Group</td>
+                  <td class="px-6 py-4 text-sm text-primary font-mono">in_23456789</td>
+                  <td class="px-6 py-4 text-sm text-primary">2024-01-15 10:05:12</td>
+                  <td class="px-6 py-4 text-sm text-secondary">—</td>
+                </tr>
+                <tr class="table-row">
+                  <td class="px-6 py-4 text-sm text-primary font-medium">React/TypeScript Developer</td>
+                  <td class="px-6 py-4 text-sm text-primary">CloudNative Inc</td>
+                  <td class="px-6 py-4 text-sm text-primary font-mono">gh_56789012</td>
+                  <td class="px-6 py-4 text-sm text-primary">2024-01-15 09:30:55</td>
+                  <td class="px-6 py-4 text-sm text-primary">2024-01-13 14:00:00</td>
+                </tr>
+                <tr class="table-row">
+                  <td class="px-6 py-4 text-sm text-primary font-medium">Frontend Team Lead</td>
+                  <td class="px-6 py-4 text-sm text-primary">FinTech Solutions</td>
+                  <td class="px-6 py-4 text-sm text-primary font-mono">li_34567890</td>
+                  <td class="px-6 py-4 text-sm text-primary">2024-01-15 08:15:40</td>
+                  <td class="px-6 py-4 text-sm text-secondary">—</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div id="pagination-section" class="px-6 py-4 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="text-sm text-secondary">Page 1 · 50 per page · Total 123</div>
+            <div class="flex items-center gap-2">
+              <button disabled class="px-4 py-2 text-sm font-medium text-secondary bg-white border border-border rounded-lg opacity-50 cursor-not-allowed">Previous</button>
+              <button class="px-4 py-2 text-sm font-medium text-primary bg-white border border-border rounded-lg hover:bg-rowHover transition-colors duration-200">Next</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div id="loading-overlay" class="hidden fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
+      <div class="bg-white border border-border rounded-lg p-8 max-w-sm mx-4 text-center">
+        <h2 class="text-primary text-xl font-semibold mb-2">Running…</h2>
+        <p class="text-secondary text-sm">Please wait</p>
+      </div>
+    </div>
+  </body>
+</html>

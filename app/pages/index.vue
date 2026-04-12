@@ -28,7 +28,7 @@
           <div v-for="item in slotsList" :id="'slot-card-' + item.id" :key="item.id" class="slot-card flex items-start justify-between rounded-lg border border-border bg-cardBg p-5">
             <NuxtLink :to="{ path: '/slots-details', query: { slot: item.id } }" class="min-w-0 flex-grow no-underline">
               <h2 class="mb-1 truncate text-base font-medium text-primary">{{ item.name }}</h2>
-              <p class="text-sm text-secondary">{{ formatCreatedLabel(item.created_at) }}</p>
+              <p class="text-sm text-secondary">{{ formatIsoRelativeLabel(item.created_at, "Created") }}</p>
             </NuxtLink>
             <button
               type="button"
@@ -104,21 +104,14 @@
 </template>
 
 <script lang="ts">
-import { formatDistanceToNow, isValid, parseISO } from "date-fns"
-import { enUS } from "date-fns/locale"
 import { v4 as uuidv4 } from "uuid"
 import { computed, defineComponent, ref } from "vue"
 
 import { deleteSlot, getSlots, postSlots } from "~/api/publicApi"
+import { formatIsoRelativeLabel } from "~/utils"
 import { ApiError } from "~/types"
 
 import { BaseModal } from "../components"
-
-function formatCreatedLabel(iso: string): string {
-  const d = parseISO(iso)
-  if (!isValid(d)) return `Created ${iso}`
-  return `Created ${formatDistanceToNow(d, { addSuffix: true, locale: enUS })}`
-}
 
 export default defineComponent({
   name: "IndexPage",
@@ -201,7 +194,7 @@ export default defineComponent({
       openNewSearchModal,
       onCreateSearch,
       onDeleteSlot,
-      formatCreatedLabel,
+      formatIsoRelativeLabel,
     }
   },
 })

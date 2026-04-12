@@ -22,12 +22,13 @@
             <template #tab-0>
               <p v-if="s1Error" class="mb-3 text-sm text-destructive">{{ fetchErrorMessage(s1Error) }}</p>
               <PaginatedDataTable
-                :page="s1PageShown"
+                :page="s1Table.pageShown"
                 :page-size="pageSize"
-                :total="s1Total"
-                :empty="!s1Pending && s1Items.length === 0"
-                :can-prev="s1CanPrev"
-                :can-next="s1CanNext"
+                :total="s1Table.total"
+                :empty="!s1Pending && s1Table.items.length === 0"
+                :can-prev="s1Table.canPrev"
+                :can-next="s1Table.canNext"
+                :navigation-disabled="interactionLocked"
                 @prev="onS1Prev"
                 @next="onS1Next"
               >
@@ -41,11 +42,11 @@
                   </tr>
                 </template>
                 <template #tbody>
-                  <tr v-for="row in s1Items" :key="row.job_id" class="cursor-pointer hover:bg-rowHover">
+                  <tr v-for="row in s1Table.items" :key="row.job_id" class="cursor-pointer hover:bg-rowHover">
                     <td class="px-6 py-4 text-sm font-medium text-primary">
                       <a
-                        v-if="jobOpenHref(row)"
-                        :href="jobOpenHref(row)"
+                        v-if="resolveApplyOrListingHref(row)"
+                        :href="resolveApplyOrListingHref(row)"
                         target="_blank"
                         rel="noopener noreferrer"
                         class="text-link transition-colors duration-200 hover:text-linkHover hover:underline"
@@ -56,7 +57,7 @@
                     </td>
                     <td class="px-6 py-4 text-sm text-primary">{{ row.company }}</td>
                     <td class="px-6 py-4 font-mono text-sm text-primary">{{ row.source_id }}</td>
-                    <td class="px-6 py-4 text-sm text-primary">{{ formatJobDateTime(row.first_seen_at) }}</td>
+                    <td class="px-6 py-4 text-sm text-primary">{{ formatIsoLocalDateTime(row.first_seen_at) }}</td>
                     <td class="px-6 py-4 text-sm" :class="postedCellClass(row.posted_at)">{{ formatPosted(row.posted_at) }}</td>
                   </tr>
                 </template>
@@ -68,8 +69,8 @@
               <div id="control-strip-section" class="mb-8">
                 <p v-if="stage2RunError" class="mb-3 text-sm text-destructive">{{ stage2RunError }}</p>
                 <div class="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-                  <KeywordChipInput v-model="includeKeywords" label="include" placeholder="Type and press space…" />
-                  <KeywordChipInput v-model="excludeKeywords" label="exclude" placeholder="Type and press space…" />
+                  <KeywordChipInput v-model="includeKeywords" label="include" placeholder="Type and press space…" :disabled="interactionLocked" />
+                  <KeywordChipInput v-model="excludeKeywords" label="exclude" placeholder="Type and press space…" :disabled="interactionLocked" />
                 </div>
                 <div class="flex justify-start">
                   <button
@@ -83,18 +84,19 @@
                 </div>
               </div>
 
-              <div id="tables-section" class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <div>
+              <div id="tables-section" class="flex flex-col gap-6 lg:flex-row">
+                <div class="w-full min-w-0 lg:flex-1">
                   <p v-if="s2pError" class="mb-3 text-sm text-destructive">{{ fetchErrorMessage(s2pError) }}</p>
                   <PaginatedDataTable
                     card-title="PASSED_STAGE_2"
                     density="compact"
-                    :page="s2PassedPageShown"
+                    :page="s2PassedTable.pageShown"
                     :page-size="pageSize"
-                    :total="s2PassedTotal"
-                    :empty="!s2pPending && s2PassedItems.length === 0"
-                    :can-prev="s2PassedCanPrev"
-                    :can-next="s2PassedCanNext"
+                    :total="s2PassedTable.total"
+                    :empty="!s2pPending && s2PassedTable.items.length === 0"
+                    :can-prev="s2PassedTable.canPrev"
+                    :can-next="s2PassedTable.canNext"
+                    :navigation-disabled="interactionLocked"
                     @prev="onS2PassedPrev"
                     @next="onS2PassedNext"
                   >
@@ -108,11 +110,11 @@
                       </tr>
                     </template>
                     <template #tbody>
-                      <tr v-for="row in s2PassedItems" :key="row.job_id" class="cursor-pointer hover:bg-rowHover">
+                      <tr v-for="row in s2PassedTable.items" :key="row.job_id" class="cursor-pointer hover:bg-rowHover">
                         <td class="px-4 py-3 text-sm font-medium text-primary">
                           <a
-                            v-if="jobOpenHref(row)"
-                            :href="jobOpenHref(row)"
+                            v-if="resolveApplyOrListingHref(row)"
+                            :href="resolveApplyOrListingHref(row)"
                             target="_blank"
                             rel="noopener noreferrer"
                             class="text-link transition-colors duration-200 hover:text-linkHover hover:underline"
@@ -123,7 +125,7 @@
                         </td>
                         <td class="px-4 py-3 text-sm text-primary">{{ row.company }}</td>
                         <td class="px-4 py-3 font-mono text-sm text-primary">{{ row.source_id }}</td>
-                        <td class="px-4 py-3 text-sm text-primary">{{ formatJobDateTimeShort(row.first_seen_at) }}</td>
+                        <td class="px-4 py-3 text-sm text-primary">{{ formatIsoLocalDateTimeMinutes(row.first_seen_at) }}</td>
                         <td class="px-4 py-3 text-sm" :class="postedCellClass(row.posted_at)">{{ formatPostedShort(row.posted_at) }}</td>
                       </tr>
                     </template>
@@ -131,17 +133,18 @@
                   <p v-if="s2pPending" class="mt-2 text-sm text-secondary">Updating…</p>
                 </div>
 
-                <div>
+                <!-- <div class="w-full min-w-0 lg:flex-1">
                   <p v-if="s2rError" class="mb-3 text-sm text-destructive">{{ fetchErrorMessage(s2rError) }}</p>
                   <PaginatedDataTable
                     card-title="REJECTED_STAGE_2"
                     density="compact"
-                    :page="s2RejectedPageShown"
+                    :page="s2RejectedTable.pageShown"
                     :page-size="pageSize"
-                    :total="s2RejectedTotal"
-                    :empty="!s2rPending && s2RejectedItems.length === 0"
-                    :can-prev="s2RejectedCanPrev"
-                    :can-next="s2RejectedCanNext"
+                    :total="s2RejectedTable.total"
+                    :empty="!s2rPending && s2RejectedTable.items.length === 0"
+                    :can-prev="s2RejectedTable.canPrev"
+                    :can-next="s2RejectedTable.canNext"
+                    :navigation-disabled="interactionLocked"
                     @prev="onS2RejectedPrev"
                     @next="onS2RejectedNext"
                   >
@@ -155,11 +158,11 @@
                       </tr>
                     </template>
                     <template #tbody>
-                      <tr v-for="row in s2RejectedItems" :key="row.job_id" class="cursor-pointer hover:bg-rowHover">
+                      <tr v-for="row in s2RejectedTable.items" :key="row.job_id" class="cursor-pointer hover:bg-rowHover">
                         <td class="px-4 py-3 text-sm font-medium text-primary">
                           <a
-                            v-if="jobOpenHref(row)"
-                            :href="jobOpenHref(row)"
+                            v-if="resolveApplyOrListingHref(row)"
+                            :href="resolveApplyOrListingHref(row)"
                             target="_blank"
                             rel="noopener noreferrer"
                             class="text-link transition-colors duration-200 hover:text-linkHover hover:underline"
@@ -170,13 +173,13 @@
                         </td>
                         <td class="px-4 py-3 text-sm text-primary">{{ row.company }}</td>
                         <td class="px-4 py-3 font-mono text-sm text-primary">{{ row.source_id }}</td>
-                        <td class="px-4 py-3 text-sm text-primary">{{ formatJobDateTimeShort(row.first_seen_at) }}</td>
+                        <td class="px-4 py-3 text-sm text-primary">{{ formatIsoLocalDateTimeMinutes(row.first_seen_at) }}</td>
                         <td class="px-4 py-3 text-sm" :class="postedCellClass(row.posted_at)">{{ formatPostedShort(row.posted_at) }}</td>
                       </tr>
                     </template>
                   </PaginatedDataTable>
                   <p v-if="s2rPending" class="mt-2 text-sm text-secondary">Updating…</p>
-                </div>
+                </div> -->
               </div>
             </template>
 
@@ -195,18 +198,19 @@
                 </div>
               </div>
 
-              <div id="tables-section-stage3" class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <div>
+              <div id="tables-section-stage3" class="flex flex-col gap-6 lg:flex-row">
+                <div class="w-full min-w-0 lg:flex-1">
                   <p v-if="s3pError" class="mb-3 text-sm text-destructive">{{ fetchErrorMessage(s3pError) }}</p>
                   <PaginatedDataTable
                     card-title="PASSED_STAGE_3"
                     density="compact"
-                    :page="s3PassedPageShown"
+                    :page="s3PassedTable.pageShown"
                     :page-size="pageSize"
-                    :total="s3PassedTotal"
-                    :empty="!s3pPending && s3PassedItems.length === 0"
-                    :can-prev="s3PassedCanPrev"
-                    :can-next="s3PassedCanNext"
+                    :total="s3PassedTable.total"
+                    :empty="!s3pPending && s3PassedTable.items.length === 0"
+                    :can-prev="s3PassedTable.canPrev"
+                    :can-next="s3PassedTable.canNext"
+                    :navigation-disabled="interactionLocked"
                     @prev="onS3PassedPrev"
                     @next="onS3PassedNext"
                   >
@@ -221,11 +225,11 @@
                       </tr>
                     </template>
                     <template #tbody>
-                      <tr v-for="row in s3PassedItems" :key="row.job_id" class="cursor-pointer hover:bg-rowHover">
+                      <tr v-for="row in s3PassedTable.items" :key="row.job_id" class="cursor-pointer hover:bg-rowHover">
                         <td class="px-4 py-3 text-sm font-medium text-primary">
                           <a
-                            v-if="jobOpenHref(row)"
-                            :href="jobOpenHref(row)"
+                            v-if="resolveApplyOrListingHref(row)"
+                            :href="resolveApplyOrListingHref(row)"
                             target="_blank"
                             rel="noopener noreferrer"
                             class="text-link transition-colors duration-200 hover:text-linkHover hover:underline"
@@ -236,7 +240,7 @@
                         </td>
                         <td class="px-4 py-3 text-sm text-primary">{{ row.company }}</td>
                         <td class="px-4 py-3 font-mono text-sm text-primary">{{ row.source_id }}</td>
-                        <td class="px-4 py-3 text-sm text-primary">{{ formatJobDateTimeShort(row.first_seen_at) }}</td>
+                        <td class="px-4 py-3 text-sm text-primary">{{ formatIsoLocalDateTimeMinutes(row.first_seen_at) }}</td>
                         <td class="px-4 py-3 text-sm" :class="postedCellClass(row.posted_at)">{{ formatPostedShort(row.posted_at) }}</td>
                         <td class="max-w-xs truncate px-4 py-3 text-sm" :class="rationaleCellClass(row.stage_3_rationale)">
                           {{ formatRationale(row.stage_3_rationale) }}
@@ -247,18 +251,19 @@
                   <p v-if="s3pPending" class="mt-2 text-sm text-secondary">Updating…</p>
                 </div>
 
-                <div>
+                <!-- <div class="w-full min-w-0 lg:flex-1">
                   <p v-if="s3rError" class="mb-3 text-sm text-destructive">{{ fetchErrorMessage(s3rError) }}</p>
                   <PaginatedDataTable
                     card-title="REJECTED_STAGE_3"
                     density="compact"
-                    :show-pagination="s3RejectedTotal > 0"
-                    :page="s3RejectedPageShown"
+                    :show-pagination="s3RejectedTable.total > 0"
+                    :page="s3RejectedTable.pageShown"
                     :page-size="pageSize"
-                    :total="s3RejectedTotal"
-                    :empty="!s3rPending && s3RejectedItems.length === 0"
-                    :can-prev="s3RejectedCanPrev"
-                    :can-next="s3RejectedCanNext"
+                    :total="s3RejectedTable.total"
+                    :empty="!s3rPending && s3RejectedTable.items.length === 0"
+                    :can-prev="s3RejectedTable.canPrev"
+                    :can-next="s3RejectedTable.canNext"
+                    :navigation-disabled="interactionLocked"
                     @prev="onS3RejectedPrev"
                     @next="onS3RejectedNext"
                   >
@@ -273,11 +278,11 @@
                       </tr>
                     </template>
                     <template #tbody>
-                      <tr v-for="row in s3RejectedItems" :key="row.job_id" class="cursor-pointer hover:bg-rowHover">
+                      <tr v-for="row in s3RejectedTable.items" :key="row.job_id" class="cursor-pointer hover:bg-rowHover">
                         <td class="px-4 py-3 text-sm font-medium text-primary">
                           <a
-                            v-if="jobOpenHref(row)"
-                            :href="jobOpenHref(row)"
+                            v-if="resolveApplyOrListingHref(row)"
+                            :href="resolveApplyOrListingHref(row)"
                             target="_blank"
                             rel="noopener noreferrer"
                             class="text-link transition-colors duration-200 hover:text-linkHover hover:underline"
@@ -288,7 +293,7 @@
                         </td>
                         <td class="px-4 py-3 text-sm text-primary">{{ row.company }}</td>
                         <td class="px-4 py-3 font-mono text-sm text-primary">{{ row.source_id }}</td>
-                        <td class="px-4 py-3 text-sm text-primary">{{ formatJobDateTimeShort(row.first_seen_at) }}</td>
+                        <td class="px-4 py-3 text-sm text-primary">{{ formatIsoLocalDateTimeMinutes(row.first_seen_at) }}</td>
                         <td class="px-4 py-3 text-sm" :class="postedCellClass(row.posted_at)">{{ formatPostedShort(row.posted_at) }}</td>
                         <td class="max-w-xs truncate px-4 py-3 text-sm" :class="rationaleCellClass(row.stage_3_rationale)">
                           {{ formatRationale(row.stage_3_rationale) }}
@@ -297,7 +302,7 @@
                     </template>
                   </PaginatedDataTable>
                   <p v-if="s3rPending" class="mt-2 text-sm text-secondary">Updating…</p>
-                </div>
+                </div> -->
               </div>
             </template>
           </UnderlineTabs>
@@ -308,34 +313,23 @@
 </template>
 
 <script lang="ts">
-import { format, isValid, parseISO } from "date-fns"
 import { computed, defineComponent, onUnmounted, ref, watch } from "vue"
 
 import { getSlot, getStageJobs, postStage2Run, postStage3Run } from "~/api/publicApi"
+import {
+  computedPaginatedTableSlice,
+  formatIsoLocalDateTime,
+  formatIsoLocalDateTimeMinutes,
+  maxJobsFromStage3Payload,
+  resolveApplyOrListingHref,
+  stage2KeywordsFromPayload,
+  stage2PayloadSignature,
+  stage3PayloadSignature,
+} from "~/utils"
 import { KeywordChipInput, PaginatedDataTable, UnderlineTabs } from "../components"
 import { ApiError, DefaultJobListLimit } from "~/types"
 
-function formatJobDateTime(iso: string): string {
-  const d = parseISO(iso)
-  if (!isValid(d)) return iso
-  return format(d, "yyyy-MM-dd HH:mm:ss")
-}
-
-function formatJobDateTimeShort(iso: string): string {
-  const d = parseISO(iso)
-  if (!isValid(d)) return iso
-  return format(d, "yyyy-MM-dd HH:mm")
-}
-
-/** Prefer direct apply link; fall back to listing URL (`IJobListItem.url`). */
-function jobOpenHref(row: { apply_url: string; url?: string }): string {
-  const apply = (row.apply_url ?? "").trim()
-  if (apply !== "") return apply
-  const listing = (row.url ?? "").trim()
-  return listing !== "" ? listing : ""
-}
-
-const STAGE3_MAX_JOBS = 50
+const STAGE3_DEFAULT_MAX_JOBS = 50
 const SLOT_POLL_MS = 2500
 
 export default defineComponent({
@@ -495,107 +489,81 @@ export default defineComponent({
 
     const includeKeywords = ref<string[]>([])
     const excludeKeywords = ref<string[]>([])
+    const stage3MaxJobs = ref(STAGE3_DEFAULT_MAX_JOBS)
+
+    const lastStagePayloadSync = ref<{ slotId: string; s2Sig: string; s3Sig: string } | null>(null)
 
     const isStage2Submitting = ref(false)
     const isStage3Submitting = ref(false)
     const stage2RunError = ref<string | null>(null)
     const stage3RunError = ref<string | null>(null)
+    let slotPollTimer: ReturnType<typeof setInterval> | null = null
 
-    const stage2SearchDisabled = computed(() => !slotId.value || slotCard.value?.stage_2.state === "running" || isStage2Submitting.value)
+    /** Any stage running or a run request in flight — lock UI on every tab to avoid conflicting actions. */
+    const interactionLocked = computed(() => anyStageRunning.value || isStage2Submitting.value || isStage3Submitting.value)
+
+    const runningStageHeadline = computed(() => {
+      const c = slotCard.value
+      if (!c) return "Pipeline running…"
+      if (c.stage_1.state === "running") return "Stage 1 running…"
+      if (c.stage_2.state === "running") return "Stage 2 running…"
+      if (c.stage_3.state === "running") return "Stage 3 running…"
+      return "Pipeline running…"
+    })
+
+    const stage2SearchDisabled = computed(() => !slotId.value || interactionLocked.value)
 
     const stage2SearchLabel = computed(() => {
       if (isStage2Submitting.value) return "Starting…"
       if (slotCard.value?.stage_2.state === "running") return "Stage 2 running…"
+      if (anyStageRunning.value) return runningStageHeadline.value
       return "Search"
     })
 
-    const stage3MatchDisabled = computed(() => !slotId.value || slotCard.value?.stage_3.state === "running" || isStage3Submitting.value)
+    const stage3MatchDisabled = computed(() => !slotId.value || interactionLocked.value)
 
     const stage3MatchLabel = computed(() => {
       if (isStage3Submitting.value) return "Starting…"
       if (slotCard.value?.stage_3.state === "running") return "Stage 3 running…"
+      if (anyStageRunning.value) return runningStageHeadline.value
       return "Match vacancies by profile"
     })
 
-    const s1Items = computed(() => s1Data.value?.items ?? [])
-    const s1Total = computed(() => s1Data.value?.total ?? 0)
-    const s1PageShown = computed(() => s1Data.value?.page ?? s1Page.value)
-    const s1CanPrev = computed(() => (s1Data.value?.page ?? s1Page.value) > 1)
-    const s1CanNext = computed(() => {
-      const d = s1Data.value
-      if (!d) return false
-      return d.page * d.limit < d.total
-    })
-
-    const s2PassedItems = computed(() => s2pData.value?.items ?? [])
-    const s2PassedTotal = computed(() => s2pData.value?.total ?? 0)
-    const s2PassedPageShown = computed(() => s2pData.value?.page ?? s2PassedPage.value)
-    const s2PassedCanPrev = computed(() => (s2pData.value?.page ?? s2PassedPage.value) > 1)
-    const s2PassedCanNext = computed(() => {
-      const d = s2pData.value
-      if (!d) return false
-      return d.page * d.limit < d.total
-    })
-
-    const s2RejectedItems = computed(() => s2rData.value?.items ?? [])
-    const s2RejectedTotal = computed(() => s2rData.value?.total ?? 0)
-    const s2RejectedPageShown = computed(() => s2rData.value?.page ?? s2RejectedPage.value)
-    const s2RejectedCanPrev = computed(() => (s2rData.value?.page ?? s2RejectedPage.value) > 1)
-    const s2RejectedCanNext = computed(() => {
-      const d = s2rData.value
-      if (!d) return false
-      return d.page * d.limit < d.total
-    })
-
-    const s3PassedItems = computed(() => s3pData.value?.items ?? [])
-    const s3PassedTotal = computed(() => s3pData.value?.total ?? 0)
-    const s3PassedPageShown = computed(() => s3pData.value?.page ?? s3PassedPage.value)
-    const s3PassedCanPrev = computed(() => (s3pData.value?.page ?? s3PassedPage.value) > 1)
-    const s3PassedCanNext = computed(() => {
-      const d = s3pData.value
-      if (!d) return false
-      return d.page * d.limit < d.total
-    })
-
-    const s3RejectedItems = computed(() => s3rData.value?.items ?? [])
-    const s3RejectedTotal = computed(() => s3rData.value?.total ?? 0)
-    const s3RejectedPageShown = computed(() => s3rData.value?.page ?? s3RejectedPage.value)
-    const s3RejectedCanPrev = computed(() => (s3rData.value?.page ?? s3RejectedPage.value) > 1)
-    const s3RejectedCanNext = computed(() => {
-      const d = s3rData.value
-      if (!d) return false
-      return d.page * d.limit < d.total
-    })
+    const s1Table = computedPaginatedTableSlice(s1Data, s1Page)
+    const s2PassedTable = computedPaginatedTableSlice(s2pData, s2PassedPage)
+    const s2RejectedTable = computedPaginatedTableSlice(s2rData, s2RejectedPage)
+    const s3PassedTable = computedPaginatedTableSlice(s3pData, s3PassedPage)
+    const s3RejectedTable = computedPaginatedTableSlice(s3rData, s3RejectedPage)
 
     function onS1Prev() {
       if (s1Page.value > 1) s1Page.value--
     }
     function onS1Next() {
-      if (s1CanNext.value) s1Page.value++
+      if (s1Table.value.canNext) s1Page.value++
     }
     function onS2PassedPrev() {
       if (s2PassedPage.value > 1) s2PassedPage.value--
     }
     function onS2PassedNext() {
-      if (s2PassedCanNext.value) s2PassedPage.value++
+      if (s2PassedTable.value.canNext) s2PassedPage.value++
     }
     function onS2RejectedPrev() {
       if (s2RejectedPage.value > 1) s2RejectedPage.value--
     }
     function onS2RejectedNext() {
-      if (s2RejectedCanNext.value) s2RejectedPage.value++
+      if (s2RejectedTable.value.canNext) s2RejectedPage.value++
     }
     function onS3PassedPrev() {
       if (s3PassedPage.value > 1) s3PassedPage.value--
     }
     function onS3PassedNext() {
-      if (s3PassedCanNext.value) s3PassedPage.value++
+      if (s3PassedTable.value.canNext) s3PassedPage.value++
     }
     function onS3RejectedPrev() {
       if (s3RejectedPage.value > 1) s3RejectedPage.value--
     }
     function onS3RejectedNext() {
-      if (s3RejectedCanNext.value) s3RejectedPage.value++
+      if (s3RejectedTable.value.canNext) s3RejectedPage.value++
     }
 
     async function onStage2Search() {
@@ -620,7 +588,7 @@ export default defineComponent({
       stage3RunError.value = null
       isStage3Submitting.value = true
       try {
-        await postStage3Run(id, { max_jobs: STAGE3_MAX_JOBS })
+        await postStage3Run(id, { max_jobs: stage3MaxJobs.value })
         await refreshSlotCard()
         await Promise.all([refreshS3Passed(), refreshS3Rejected()])
       } catch (e) {
@@ -629,8 +597,6 @@ export default defineComponent({
         isStage3Submitting.value = false
       }
     }
-
-    let slotPollTimer: ReturnType<typeof setInterval> | null = null
 
     function clearSlotPoll() {
       if (slotPollTimer != null) {
@@ -649,12 +615,12 @@ export default defineComponent({
 
     function formatPosted(posted: string | null): string {
       if (posted == null || posted === "") return "—"
-      return formatJobDateTime(posted)
+      return formatIsoLocalDateTime(posted)
     }
 
     function formatPostedShort(posted: string | null): string {
       if (posted == null || posted === "") return "—"
-      return formatJobDateTimeShort(posted)
+      return formatIsoLocalDateTimeMinutes(posted)
     }
 
     function formatRationale(r: string | null): string {
@@ -676,7 +642,33 @@ export default defineComponent({
       s2RejectedPage.value = 1
       s3PassedPage.value = 1
       s3RejectedPage.value = 1
+      lastStagePayloadSync.value = null
     })
+
+    watch(
+      () => [slotId.value, slotCard.value] as const,
+      ([id, card]) => {
+        if (!id || !card || card.id !== id) return
+        const s2Sig = stage2PayloadSignature(card.stage_2.payload)
+        const s3Sig = stage3PayloadSignature(card.stage_3.payload)
+        const prev = lastStagePayloadSync.value
+        if (prev && prev.slotId === id && prev.s2Sig === s2Sig && prev.s3Sig === s3Sig) return
+        lastStagePayloadSync.value = { slotId: id, s2Sig, s3Sig }
+
+        const kw = stage2KeywordsFromPayload(card.stage_2.payload)
+        if (kw) {
+          includeKeywords.value = kw.include
+          excludeKeywords.value = kw.exclude
+        } else {
+          includeKeywords.value = []
+          excludeKeywords.value = []
+        }
+
+        const mj = maxJobsFromStage3Payload(card.stage_3.payload)
+        stage3MaxJobs.value = mj ?? STAGE3_DEFAULT_MAX_JOBS
+      },
+      { immediate: true },
+    )
 
     watch(
       [anyStageRunning, slotId],
@@ -714,51 +706,32 @@ export default defineComponent({
       excludeKeywords,
       s1Error,
       s1Pending,
-      s1Items,
-      s1Total,
-      s1PageShown,
-      s1CanPrev,
-      s1CanNext,
+      s1Table,
       onS1Prev,
       onS1Next,
       s2pError,
       s2pPending,
-      s2PassedItems,
-      s2PassedTotal,
-      s2PassedPageShown,
-      s2PassedCanPrev,
-      s2PassedCanNext,
+      s2PassedTable,
       onS2PassedPrev,
       onS2PassedNext,
       s2rError,
       s2rPending,
-      s2RejectedItems,
-      s2RejectedTotal,
-      s2RejectedPageShown,
-      s2RejectedCanPrev,
-      s2RejectedCanNext,
+      s2RejectedTable,
       onS2RejectedPrev,
       onS2RejectedNext,
       s3pError,
       s3pPending,
-      s3PassedItems,
-      s3PassedTotal,
-      s3PassedPageShown,
-      s3PassedCanPrev,
-      s3PassedCanNext,
+      s3PassedTable,
       onS3PassedPrev,
       onS3PassedNext,
       s3rError,
       s3rPending,
-      s3RejectedItems,
-      s3RejectedTotal,
-      s3RejectedPageShown,
-      s3RejectedCanPrev,
-      s3RejectedCanNext,
+      s3RejectedTable,
       onS3RejectedPrev,
       onS3RejectedNext,
       stage2RunError,
       stage3RunError,
+      interactionLocked,
       stage2SearchDisabled,
       stage2SearchLabel,
       stage3MatchDisabled,
@@ -768,12 +741,12 @@ export default defineComponent({
       postedCellClass,
       formatPosted,
       formatPostedShort,
-      formatJobDateTime,
-      formatJobDateTimeShort,
+      formatIsoLocalDateTime,
+      formatIsoLocalDateTimeMinutes,
       formatRationale,
       rationaleCellClass,
       fetchErrorMessage,
-      jobOpenHref,
+      resolveApplyOrListingHref,
     }
   },
 })

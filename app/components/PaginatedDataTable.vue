@@ -54,13 +54,15 @@ export default defineComponent({
     /** Optional heading row above the table (e.g. PASSED_STAGE_2). */
     cardTitle: { type: String, default: "" },
     showPagination: { type: Boolean, default: true },
+    /** When true, prev/next stay disabled (e.g. while another pipeline stage runs). */
+    navigationDisabled: { type: Boolean, default: false },
   },
 
   emits: ["prev", "next"],
 
   setup(props, { emit }) {
-    const prevDisabled = computed(() => props.empty || !props.canPrev)
-    const nextDisabled = computed(() => props.empty || !props.canNext)
+    const prevDisabled = computed(() => props.navigationDisabled || props.empty || !props.canPrev)
+    const nextDisabled = computed(() => props.navigationDisabled || props.empty || !props.canNext)
 
     const footerPaddingClass = computed(() => (props.density === "compact" ? "px-4 py-3" : "px-6 py-4"))
 

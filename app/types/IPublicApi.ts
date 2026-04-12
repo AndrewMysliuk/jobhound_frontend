@@ -19,6 +19,8 @@ export interface IStageFull {
   started_at: string | null
   finished_at: string | null
   error: IStageError | null
+  /** Last run request for this stage (shape depends on stage); null when idle or unavailable. */
+  payload: Record<string, unknown> | null
 }
 
 export interface ISlotListItem {

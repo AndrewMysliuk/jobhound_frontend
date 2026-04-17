@@ -42,7 +42,7 @@
                   </tr>
                 </template>
                 <template #tbody>
-                  <tr v-for="row in s1Table.items" :key="row.job_id" class="cursor-pointer hover:bg-rowHover">
+                  <tr v-for="row in s1Table.items" :key="row.job_id" class="cursor-pointer align-top hover:bg-rowHover">
                     <td class="px-6 py-4 text-sm font-medium text-primary">
                       <a
                         v-if="resolveApplyOrListingHref(row)"
@@ -110,7 +110,7 @@
                       </tr>
                     </template>
                     <template #tbody>
-                      <tr v-for="row in s2PassedTable.items" :key="row.job_id" class="cursor-pointer hover:bg-rowHover">
+                      <tr v-for="row in s2PassedTable.items" :key="row.job_id" class="cursor-pointer align-top hover:bg-rowHover">
                         <td class="px-4 py-3 text-sm font-medium text-primary">
                           <a
                             v-if="resolveApplyOrListingHref(row)"
@@ -225,7 +225,7 @@
                       </tr>
                     </template>
                     <template #tbody>
-                      <tr v-for="row in s3PassedTable.items" :key="row.job_id" class="cursor-pointer hover:bg-rowHover">
+                      <tr v-for="row in s3PassedTable.items" :key="row.job_id" class="cursor-pointer align-top hover:bg-rowHover">
                         <td class="px-4 py-3 text-sm font-medium text-primary">
                           <a
                             v-if="resolveApplyOrListingHref(row)"

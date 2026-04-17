@@ -60,6 +60,8 @@ export interface IJobListItem {
   job_id: string
   title: string
   company: string
+  /** Full vacancy text from the collector (domain `Job.Description`). */
+  description: string
   source_id: string
   /** Listing / canonical job page (domain `Job.URL`). */
   url: string

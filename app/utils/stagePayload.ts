@@ -13,8 +13,9 @@ function stringArrayFromUnknown(v: unknown): string[] | null {
 
 export function stage2KeywordsFromPayload(payload: Record<string, unknown> | null): { include: string[]; exclude: string[] } | null {
   if (payload == null) return null
-  const include = stringArrayFromUnknown(payload.include)
-  const exclude = stringArrayFromUnknown(payload.exclude)
+  // API may JSON-null optional lists; treat as empty arrays (same as omitting the key).
+  const include = payload.include == null ? [] : stringArrayFromUnknown(payload.include)
+  const exclude = payload.exclude == null ? [] : stringArrayFromUnknown(payload.exclude)
   if (include == null || exclude == null) return null
   return { include: [...include], exclude: [...exclude] }
 }

@@ -329,7 +329,7 @@ import {
 import { KeywordChipInput, PaginatedDataTable, UnderlineTabs } from "../components"
 import { ApiError, DefaultJobListLimit } from "~/types"
 
-const STAGE3_DEFAULT_MAX_JOBS = 50
+const STAGE3_DEFAULT_MAX_JOBS = 99
 const SLOT_POLL_MS = 2500
 
 export default defineComponent({

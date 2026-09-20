@@ -7,6 +7,7 @@
     <template v-else>
       <!-- List layout (template.html searches view) -->
       <div v-if="slotsList.length" id="searches-container" class="w-full max-w-[640px]">
+        <p v-if="createError" class="mb-4 text-sm text-destructive">{{ createError }}</p>
         <p v-if="deleteError" class="mb-4 text-sm text-destructive">{{ deleteError }}</p>
 
         <div id="header-section" class="mb-2 flex items-center justify-between">
@@ -15,10 +16,10 @@
             id="new-search-btn"
             type="button"
             class="rounded-lg bg-btnPrimary py-2 px-5 text-sm font-medium text-btnText shadow-sm transition-colors duration-200 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-btnPrimary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            :disabled="slotsList.length >= 3"
-            @click="openNewSearchModal"
+            :disabled="slotsList.length >= 3 || isCreating"
+            @click="onCreateSearch"
           >
-            New search
+            {{ isCreating ? "Creating…" : "New search" }}
           </button>
         </div>
 
@@ -48,58 +49,19 @@
 
         <p id="empty-state-helper" class="mb-8 max-w-md text-base text-secondary sm:text-lg">You can have up to 3 active searches.</p>
 
+        <p v-if="createError" class="mb-4 text-sm text-destructive">{{ createError }}</p>
+
         <button
           id="new-search-btn"
           type="button"
           class="rounded-lg bg-btnPrimary py-2.5 px-6 font-medium text-btnText shadow-sm transition-colors duration-200 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-btnPrimary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-          :disabled="slotsList.length >= 3"
-          @click="openNewSearchModal"
+          :disabled="slotsList.length >= 3 || isCreating"
+          @click="onCreateSearch"
         >
-          New search
+          {{ isCreating ? "Creating…" : "New search" }}
         </button>
       </div>
     </template>
-
-    <BaseModal v-model="isNewSearchModalOpen" panel-id="new-search-modal" max-width-class="max-w-[480px]">
-      <h2 id="modal-title" class="mb-2 text-xl font-semibold tracking-tight text-primary sm:text-2xl">New search</h2>
-
-      <p id="modal-helper" class="mb-6 text-sm text-secondary">Keyword for this search</p>
-
-      <div v-if="createError" class="mb-4 text-sm text-destructive">{{ createError }}</div>
-
-      <div id="modal-input-group" class="mb-8">
-        <input
-          id="search-keyword-input"
-          v-model="searchKeyword"
-          type="text"
-          placeholder="frontend, etc."
-          class="w-full rounded-lg border border-border bg-cardBg px-4 py-2.5 text-base text-primary transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-btnPrimary disabled:cursor-not-allowed disabled:opacity-50"
-          :disabled="isCreating"
-          @keydown.enter.prevent="onCreateSearch"
-        />
-      </div>
-
-      <div id="modal-actions" class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-        <button
-          id="cancel-btn"
-          type="button"
-          class="w-full rounded-lg border border-border py-2.5 px-5 font-medium text-link transition-colors duration-200 hover:bg-page hover:text-linkHover focus:outline-none focus:ring-2 focus:ring-border focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-          :disabled="isCreating"
-          @click="isNewSearchModalOpen = false"
-        >
-          Cancel
-        </button>
-        <button
-          id="create-btn"
-          type="button"
-          class="w-full rounded-lg bg-btnPrimary py-2.5 px-6 font-medium text-btnText shadow-sm transition-colors duration-200 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-btnPrimary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-          :disabled="!searchKeyword.trim() || slotsList.length >= 3 || isCreating"
-          @click="onCreateSearch"
-        >
-          {{ isCreating ? "Creating…" : "Create" }}
-        </button>
-      </div>
-    </BaseModal>
   </main>
 </template>
 
@@ -111,14 +73,17 @@ import { deleteSlot, getSlots, postSlots } from "~/api/publicApi"
 import { formatIsoRelativeLabel } from "~/utils"
 import { ApiError } from "~/types"
 
-import { BaseModal } from "../components"
+function nextSearchName(existing: { name: string }[]): string {
+  const used = new Set(existing.map((s) => s.name))
+  for (let i = 1; i <= existing.length + 1; i++) {
+    const name = `Search ${i}`
+    if (!used.has(name)) return name
+  }
+  return `Search ${existing.length + 1}`
+}
 
 export default defineComponent({
   name: "IndexPage",
-
-  components: {
-    BaseModal,
-  },
 
   setup() {
     const { data: slotsResponse, pending: isLoading, error, refresh } = useAsyncData("slots", () => getSlots())
@@ -136,28 +101,17 @@ export default defineComponent({
       return slotsList.value.length === 0 ? "justify-center py-24" : "py-12"
     })
 
-    const isNewSearchModalOpen = ref(false)
-    const searchKeyword = ref("")
     const isCreating = ref(false)
     const createError = ref<string | null>(null)
     const deletingId = ref<string | null>(null)
     const deleteError = ref<string | null>(null)
 
-    function openNewSearchModal() {
-      createError.value = null
-      searchKeyword.value = ""
-      isNewSearchModalOpen.value = true
-    }
-
     async function onCreateSearch() {
-      const kw = searchKeyword.value.trim()
-      if (!kw || slotsList.value.length >= 3 || isCreating.value) return
+      if (slotsList.value.length >= 3 || isCreating.value) return
       createError.value = null
       isCreating.value = true
       try {
-        const created = await postSlots(kw, uuidv4())
-        isNewSearchModalOpen.value = false
-        searchKeyword.value = ""
+        const created = await postSlots(nextSearchName(slotsList.value), uuidv4())
         await refresh()
         await navigateTo({ path: "/slots-details", query: { slot: created.id } })
       } catch (e) {
@@ -185,13 +139,10 @@ export default defineComponent({
       isLoading,
       loadError,
       mainVerticalClass,
-      isNewSearchModalOpen,
-      searchKeyword,
       isCreating,
       createError,
       deletingId,
       deleteError,
-      openNewSearchModal,
       onCreateSearch,
       onDeleteSlot,
       formatIsoRelativeLabel,

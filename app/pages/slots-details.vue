@@ -36,7 +36,7 @@
                   <tr class="border-b border-border bg-tableHeaderBg">
                     <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">Title</th>
                     <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">Company</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">Source ID</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">Source</th>
                     <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">First Seen At</th>
                     <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">Posted At</th>
                   </tr>
@@ -56,7 +56,7 @@
                       <template v-else>{{ row.title }}</template>
                     </td>
                     <td class="px-6 py-4 text-sm text-primary">{{ row.company }}</td>
-                    <td class="px-6 py-4 font-mono text-sm text-primary">{{ row.source_id }}</td>
+                    <td class="px-6 py-4 text-sm text-primary">{{ labelForSourceId(row.source_id) }}</td>
                     <td class="px-6 py-4 text-sm text-primary">{{ formatIsoLocalDateTime(row.first_seen_at) }}</td>
                     <td class="px-6 py-4 text-sm" :class="postedCellClass(row.posted_at)">{{ formatPosted(row.posted_at) }}</td>
                   </tr>
@@ -104,7 +104,7 @@
                       <tr class="border-b border-border bg-tableHeaderBg">
                         <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">Title</th>
                         <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">Company</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">Source ID</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">Source</th>
                         <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">First Seen</th>
                         <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">Posted</th>
                       </tr>
@@ -124,7 +124,7 @@
                           <template v-else>{{ row.title }}</template>
                         </td>
                         <td class="px-4 py-3 text-sm text-primary">{{ row.company }}</td>
-                        <td class="px-4 py-3 font-mono text-sm text-primary">{{ row.source_id }}</td>
+                        <td class="px-4 py-3 text-sm text-primary">{{ labelForSourceId(row.source_id) }}</td>
                         <td class="px-4 py-3 text-sm text-primary">{{ formatIsoLocalDateTimeMinutes(row.first_seen_at) }}</td>
                         <td class="px-4 py-3 text-sm" :class="postedCellClass(row.posted_at)">{{ formatPostedShort(row.posted_at) }}</td>
                       </tr>
@@ -218,7 +218,7 @@
                       <tr class="border-b border-border bg-tableHeaderBg">
                         <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">Title</th>
                         <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">Company</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">Source ID</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">Source</th>
                         <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">First Seen</th>
                         <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">Posted</th>
                         <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">Rationale</th>
@@ -239,7 +239,7 @@
                           <template v-else>{{ row.title }}</template>
                         </td>
                         <td class="px-4 py-3 text-sm text-primary">{{ row.company }}</td>
-                        <td class="px-4 py-3 font-mono text-sm text-primary">{{ row.source_id }}</td>
+                        <td class="px-4 py-3 text-sm text-primary">{{ labelForSourceId(row.source_id) }}</td>
                         <td class="px-4 py-3 text-sm text-primary">{{ formatIsoLocalDateTimeMinutes(row.first_seen_at) }}</td>
                         <td class="px-4 py-3 text-sm" :class="postedCellClass(row.posted_at)">{{ formatPostedShort(row.posted_at) }}</td>
                         <td class="max-w-xs truncate px-4 py-3 text-sm" :class="rationaleCellClass(row.stage_3_rationale)">
@@ -320,6 +320,7 @@ import {
   computedPaginatedTableSlice,
   formatIsoLocalDateTime,
   formatIsoLocalDateTimeMinutes,
+  labelForSourceId,
   maxJobsFromStage3Payload,
   resolveApplyOrListingHref,
   stage2KeywordsFromPayload,
@@ -747,6 +748,7 @@ export default defineComponent({
       rationaleCellClass,
       fetchErrorMessage,
       resolveApplyOrListingHref,
+      labelForSourceId,
     }
   },
 })

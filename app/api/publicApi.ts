@@ -1,4 +1,5 @@
 import { publicApiRequest } from "./client"
+import { ApiError, DefaultJobListLimit } from "~/types"
 import type {
   ICreateSlotRequest,
   IGetStageJobsQuery,
@@ -83,6 +84,32 @@ export async function getStageJobs(slotId: string, stage: 1 | 2 | 3, query?: IGe
   const qs = params.toString()
   const path = `/slots/${id}/stages/${stage}/jobs${qs ? `?${qs}` : ""}`
   return publicApiRequest<IJobListResponse>(path, { method: "GET" })
+}
+
+/** Stage-2 rows that are not rejected (PASSED + UNKNOWN). Falls back on older APIs without ELIGIBLE_STAGE_2. */
+export async function getStage2EligibleJobs(
+  slotId: string,
+  query?: Pick<IGetStageJobsQuery, "page" | "limit">,
+): Promise<IJobListResponse> {
+  const page = query?.page ?? 1
+  const limit = query?.limit ?? DefaultJobListLimit
+  try {
+    return await getStageJobs(slotId, 2, { page, limit, status: "ELIGIBLE_STAGE_2" })
+  } catch (e) {
+    if (!(e instanceof ApiError) || e.code !== "invalid_query") {
+      throw e
+    }
+    const [passed, unknown] = await Promise.all([
+      getStageJobs(slotId, 2, { page, limit, status: "PASSED_STAGE_2" }),
+      getStageJobs(slotId, 2, { page, limit, status: "UNKNOWN_STAGE_2" }),
+    ])
+    return {
+      items: [...passed.items, ...unknown.items],
+      page,
+      limit,
+      total: passed.total + unknown.total,
+    }
+  }
 }
 
 export async function patchStageJobBucket(

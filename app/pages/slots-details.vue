@@ -69,8 +69,8 @@
               <div id="control-strip-section" class="mb-8">
                 <p v-if="stage2RunError" class="mb-3 text-sm text-destructive">{{ stage2RunError }}</p>
                 <div class="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-                  <KeywordChipInput v-model="includeKeywords" label="include" placeholder="Type and press space…" :disabled="interactionLocked" />
-                  <KeywordChipInput v-model="excludeKeywords" label="exclude" placeholder="Type and press space…" :disabled="interactionLocked" />
+                  <KeywordLineTextarea v-model="includeKeywords" label="include" placeholder="One phrase per line…" :disabled="interactionLocked" />
+                  <KeywordLineTextarea v-model="excludeKeywords" label="exclude" placeholder="One phrase per line…" :disabled="interactionLocked" />
                 </div>
                 <div class="flex justify-start">
                   <button
@@ -88,7 +88,7 @@
                 <div class="w-full min-w-0 lg:flex-1">
                   <p v-if="s2pError" class="mb-3 text-sm text-destructive">{{ fetchErrorMessage(s2pError) }}</p>
                   <PaginatedDataTable
-                    card-title="PASSED_STAGE_2"
+                    card-title="After Stage 2"
                     density="compact"
                     :page="s2PassedTable.pageShown"
                     :page-size="pageSize"
@@ -315,7 +315,7 @@
 <script lang="ts">
 import { computed, defineComponent, onUnmounted, ref, watch } from "vue"
 
-import { getSlot, getStageJobs, postStage2Run, postStage3Run } from "~/api/publicApi"
+import { getSlot, getStage2EligibleJobs, getStageJobs, postStage2Run, postStage3Run } from "~/api/publicApi"
 import {
   computedPaginatedTableSlice,
   formatIsoLocalDateTime,
@@ -323,11 +323,13 @@ import {
   labelForSourceId,
   maxJobsFromStage3Payload,
   resolveApplyOrListingHref,
+  DEFAULT_STAGE2_EXCLUDE,
   stage2KeywordsFromPayload,
   stage2PayloadSignature,
+  stage2RulesFromKeywords,
   stage3PayloadSignature,
 } from "~/utils"
-import { KeywordChipInput, PaginatedDataTable, UnderlineTabs } from "../components"
+import { KeywordLineTextarea, PaginatedDataTable, UnderlineTabs } from "../components"
 import { ApiError, DefaultJobListLimit } from "~/types"
 
 const STAGE3_DEFAULT_MAX_JOBS = 99
@@ -337,7 +339,7 @@ export default defineComponent({
   name: "SlotsDetailsPage",
 
   components: {
-    KeywordChipInput,
+    KeywordLineTextarea,
     PaginatedDataTable,
     UnderlineTabs,
   },
@@ -422,10 +424,9 @@ export default defineComponent({
       () => {
         const id = slotId.value
         if (!id) return Promise.resolve(null)
-        return getStageJobs(id, 2, {
+        return getStage2EligibleJobs(id, {
           page: s2PassedPage.value,
           limit: pageSize,
-          status: "PASSED_STAGE_2",
         })
       },
       { watch: [slotId, s2PassedPage] },
@@ -573,7 +574,9 @@ export default defineComponent({
       stage2RunError.value = null
       isStage2Submitting.value = true
       try {
-        await postStage2Run(id, { include: includeKeywords.value, exclude: excludeKeywords.value })
+        await postStage2Run(id, {
+          rules: stage2RulesFromKeywords(includeKeywords.value, excludeKeywords.value),
+        })
         await refreshSlotCard()
         await Promise.all([refreshS2Passed(), refreshS2Rejected(), refreshS3Passed(), refreshS3Rejected()])
       } catch (e) {
@@ -656,13 +659,15 @@ export default defineComponent({
         if (prev && prev.slotId === id && prev.s2Sig === s2Sig && prev.s3Sig === s3Sig) return
         lastStagePayloadSync.value = { slotId: id, s2Sig, s3Sig }
 
-        const kw = stage2KeywordsFromPayload(card.stage_2.payload)
-        if (kw) {
+        const payload = card.stage_2.payload
+        const kw = stage2KeywordsFromPayload(payload)
+        const fromRules = payload != null && Array.isArray(payload.rules)
+        if (fromRules && kw) {
           includeKeywords.value = kw.include
-          excludeKeywords.value = kw.exclude
+          excludeKeywords.value = kw.exclude.length > 0 ? kw.exclude : [...DEFAULT_STAGE2_EXCLUDE]
         } else {
           includeKeywords.value = []
-          excludeKeywords.value = []
+          excludeKeywords.value = [...DEFAULT_STAGE2_EXCLUDE]
         }
 
         const mj = maxJobsFromStage3Payload(card.stage_3.payload)
@@ -688,6 +693,15 @@ export default defineComponent({
         void refreshAllStageJobLists()
       }
     })
+
+    watch(
+      () => slotCard.value?.stage_2.state,
+      (state, prev) => {
+        if (prev === "running" && (state === "succeeded" || state === "failed")) {
+          void refreshAllStageJobLists()
+        }
+      },
+    )
 
     onUnmounted(() => {
       clearSlotPoll()

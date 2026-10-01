@@ -1,9 +1,9 @@
 <template>
   <main id="main-content" class="flex min-h-[calc(100vh-4rem)] w-full flex-1 flex-col px-4 py-8 sm:px-6 lg:px-8" :class="mainAlignClass">
     <div class="mx-auto w-full" :class="innerMaxWidthClass">
-      <NuxtLink to="/" class="text-sm font-medium text-link transition-colors duration-200 hover:text-linkHover">← Searches</NuxtLink>
+      <NuxtLink to="/" class="text-sm font-medium text-link transition-colors duration-200 hover:text-link-hover">← Searches</NuxtLink>
 
-      <div v-if="!slotId" class="mt-8 rounded-card border border-border bg-cardBg p-8 shadow-sm">
+      <div v-if="!slotId" class="mt-8 rounded-card border border-border bg-card-bg p-8 shadow-sm">
         <h1 class="text-2xl font-semibold text-primary">Slot details</h1>
         <p class="mt-2 text-secondary">Open a search from the list to see details.</p>
       </div>
@@ -33,7 +33,7 @@
                 @next="onS1Next"
               >
                 <template #thead>
-                  <tr class="border-b border-border bg-tableHeaderBg">
+                  <tr class="border-b border-border bg-table-header-bg">
                     <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">Title</th>
                     <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">Company</th>
                     <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">Source</th>
@@ -42,14 +42,14 @@
                   </tr>
                 </template>
                 <template #tbody>
-                  <tr v-for="row in s1Table.items" :key="row.job_id" class="cursor-pointer align-top hover:bg-rowHover">
+                  <tr v-for="row in s1Table.items" :key="row.job_id" class="cursor-pointer align-top hover:bg-row-hover">
                     <td class="px-6 py-4 text-sm font-medium text-primary">
                       <a
                         v-if="resolveApplyOrListingHref(row)"
                         :href="resolveApplyOrListingHref(row)"
                         target="_blank"
                         rel="noopener noreferrer"
-                        class="text-link transition-colors duration-200 hover:text-linkHover hover:underline"
+                        class="text-link transition-colors duration-200 hover:text-link-hover hover:underline"
                         @click.stop
                         >{{ row.title }}</a
                       >
@@ -75,7 +75,7 @@
                 <div class="flex justify-start">
                   <button
                     type="button"
-                    class="rounded-lg bg-btnPrimary px-6 py-2.5 text-sm font-medium text-btnText transition-colors duration-200 hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    class="rounded-lg bg-btn-primary px-6 py-2.5 text-sm font-medium text-btn-text transition-colors duration-200 hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
                     :disabled="stage2SearchDisabled"
                     @click="onStage2Search"
                   >
@@ -101,7 +101,7 @@
                     @next="onS2PassedNext"
                   >
                     <template #thead>
-                      <tr class="border-b border-border bg-tableHeaderBg">
+                      <tr class="border-b border-border bg-table-header-bg">
                         <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">Title</th>
                         <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">Company</th>
                         <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">Source</th>
@@ -110,14 +110,14 @@
                       </tr>
                     </template>
                     <template #tbody>
-                      <tr v-for="row in s2PassedTable.items" :key="row.job_id" class="cursor-pointer align-top hover:bg-rowHover">
+                      <tr v-for="row in s2PassedTable.items" :key="row.job_id" class="cursor-pointer align-top hover:bg-row-hover">
                         <td class="px-4 py-3 text-sm font-medium text-primary">
                           <a
                             v-if="resolveApplyOrListingHref(row)"
                             :href="resolveApplyOrListingHref(row)"
                             target="_blank"
                             rel="noopener noreferrer"
-                            class="text-link transition-colors duration-200 hover:text-linkHover hover:underline"
+                            class="text-link transition-colors duration-200 hover:text-link-hover hover:underline"
                             @click.stop
                             >{{ row.title }}</a
                           >
@@ -149,7 +149,7 @@
                     @next="onS2RejectedNext"
                   >
                     <template #thead>
-                      <tr class="border-b border-border bg-tableHeaderBg">
+                      <tr class="border-b border-border bg-table-header-bg">
                         <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">Title</th>
                         <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">Company</th>
                         <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">Source ID</th>
@@ -158,14 +158,14 @@
                       </tr>
                     </template>
                     <template #tbody>
-                      <tr v-for="row in s2RejectedTable.items" :key="row.job_id" class="cursor-pointer hover:bg-rowHover">
+                      <tr v-for="row in s2RejectedTable.items" :key="row.job_id" class="cursor-pointer hover:bg-row-hover">
                         <td class="px-4 py-3 text-sm font-medium text-primary">
                           <a
                             v-if="resolveApplyOrListingHref(row)"
                             :href="resolveApplyOrListingHref(row)"
                             target="_blank"
                             rel="noopener noreferrer"
-                            class="text-link transition-colors duration-200 hover:text-linkHover hover:underline"
+                            class="text-link transition-colors duration-200 hover:text-link-hover hover:underline"
                             @click.stop
                             >{{ row.title }}</a
                           >
@@ -189,7 +189,7 @@
                 <div class="flex justify-start">
                   <button
                     type="button"
-                    class="rounded-lg bg-btnPrimary px-6 py-2.5 text-sm font-medium text-btnText transition-colors duration-200 hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    class="rounded-lg bg-btn-primary px-6 py-2.5 text-sm font-medium text-btn-text transition-colors duration-200 hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
                     :disabled="stage3MatchDisabled"
                     @click="onStage3Match"
                   >
@@ -215,7 +215,7 @@
                     @next="onS3PassedNext"
                   >
                     <template #thead>
-                      <tr class="border-b border-border bg-tableHeaderBg">
+                      <tr class="border-b border-border bg-table-header-bg">
                         <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">Title</th>
                         <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">Company</th>
                         <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">Source</th>
@@ -225,14 +225,14 @@
                       </tr>
                     </template>
                     <template #tbody>
-                      <tr v-for="row in s3PassedTable.items" :key="row.job_id" class="cursor-pointer align-top hover:bg-rowHover">
+                      <tr v-for="row in s3PassedTable.items" :key="row.job_id" class="cursor-pointer align-top hover:bg-row-hover">
                         <td class="px-4 py-3 text-sm font-medium text-primary">
                           <a
                             v-if="resolveApplyOrListingHref(row)"
                             :href="resolveApplyOrListingHref(row)"
                             target="_blank"
                             rel="noopener noreferrer"
-                            class="text-link transition-colors duration-200 hover:text-linkHover hover:underline"
+                            class="text-link transition-colors duration-200 hover:text-link-hover hover:underline"
                             @click.stop
                             >{{ row.title }}</a
                           >
@@ -268,7 +268,7 @@
                     @next="onS3RejectedNext"
                   >
                     <template #thead>
-                      <tr class="border-b border-border bg-tableHeaderBg">
+                      <tr class="border-b border-border bg-table-header-bg">
                         <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">Title</th>
                         <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">Company</th>
                         <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">Source ID</th>
@@ -278,14 +278,14 @@
                       </tr>
                     </template>
                     <template #tbody>
-                      <tr v-for="row in s3RejectedTable.items" :key="row.job_id" class="cursor-pointer hover:bg-rowHover">
+                      <tr v-for="row in s3RejectedTable.items" :key="row.job_id" class="cursor-pointer hover:bg-row-hover">
                         <td class="px-4 py-3 text-sm font-medium text-primary">
                           <a
                             v-if="resolveApplyOrListingHref(row)"
                             :href="resolveApplyOrListingHref(row)"
                             target="_blank"
                             rel="noopener noreferrer"
-                            class="text-link transition-colors duration-200 hover:text-linkHover hover:underline"
+                            class="text-link transition-colors duration-200 hover:text-link-hover hover:underline"
                             @click.stop
                             >{{ row.title }}</a
                           >
@@ -316,21 +316,23 @@
 import { computed, defineComponent, onUnmounted, ref, watch } from "vue"
 
 import { getSlot, getStage2EligibleJobs, getStageJobs, postStage2Run, postStage3Run } from "~/api/publicApi"
+import { DefaultJobListLimit } from "~/types"
 import {
   computedPaginatedTableSlice,
+  DEFAULT_STAGE2_EXCLUDE,
   formatIsoLocalDateTime,
   formatIsoLocalDateTimeMinutes,
   labelForSourceId,
   maxJobsFromStage3Payload,
   resolveApplyOrListingHref,
-  DEFAULT_STAGE2_EXCLUDE,
   stage2KeywordsFromPayload,
   stage2PayloadSignature,
   stage2RulesFromKeywords,
   stage3PayloadSignature,
+  toApiError,
 } from "~/utils"
+
 import { KeywordLineTextarea, PaginatedDataTable, UnderlineTabs } from "../components"
-import { ApiError, DefaultJobListLimit } from "~/types"
 
 const STAGE3_DEFAULT_MAX_JOBS = 99
 const SLOT_POLL_MS = 2500
@@ -364,13 +366,13 @@ export default defineComponent({
         if (!id) return Promise.resolve(null)
         return getSlot(id)
       },
-      { watch: [slotId] },
+      { watch: [slotId] }
     )
 
     const loadError = computed(() => {
       const e = error.value
       if (!e) return null
-      return e instanceof Error ? e.message : String(e)
+      return toApiError(e).message
     })
 
     const anyStageRunning = computed(() => {
@@ -411,7 +413,7 @@ export default defineComponent({
         if (!id) return Promise.resolve(null)
         return getStageJobs(id, 1, { page: s1Page.value, limit: pageSize })
       },
-      { watch: [slotId, s1Page] },
+      { watch: [slotId, s1Page] }
     )
 
     const {
@@ -429,7 +431,7 @@ export default defineComponent({
           limit: pageSize,
         })
       },
-      { watch: [slotId, s2PassedPage] },
+      { watch: [slotId, s2PassedPage] }
     )
 
     const {
@@ -448,7 +450,7 @@ export default defineComponent({
           status: "REJECTED_STAGE_2",
         })
       },
-      { watch: [slotId, s2RejectedPage] },
+      { watch: [slotId, s2RejectedPage] }
     )
 
     const {
@@ -467,7 +469,7 @@ export default defineComponent({
           status: "PASSED_STAGE_3",
         })
       },
-      { watch: [slotId, s3PassedPage] },
+      { watch: [slotId, s3PassedPage] }
     )
 
     const {
@@ -486,7 +488,7 @@ export default defineComponent({
           status: "REJECTED_STAGE_3",
         })
       },
-      { watch: [slotId, s3RejectedPage] },
+      { watch: [slotId, s3RejectedPage] }
     )
 
     const includeKeywords = ref<string[]>([])
@@ -579,8 +581,8 @@ export default defineComponent({
         })
         await refreshSlotCard()
         await Promise.all([refreshS2Passed(), refreshS2Rejected(), refreshS3Passed(), refreshS3Rejected()])
-      } catch (e) {
-        stage2RunError.value = e instanceof ApiError ? e.message : e instanceof Error ? e.message : String(e)
+      } catch (e: unknown) {
+        stage2RunError.value = toApiError(e).message
       } finally {
         isStage2Submitting.value = false
       }
@@ -595,8 +597,8 @@ export default defineComponent({
         await postStage3Run(id, { max_jobs: stage3MaxJobs.value })
         await refreshSlotCard()
         await Promise.all([refreshS3Passed(), refreshS3Rejected()])
-      } catch (e) {
-        stage3RunError.value = e instanceof ApiError ? e.message : e instanceof Error ? e.message : String(e)
+      } catch (e: unknown) {
+        stage3RunError.value = toApiError(e).message
       } finally {
         isStage3Submitting.value = false
       }
@@ -637,7 +639,7 @@ export default defineComponent({
     }
 
     function fetchErrorMessage(e: unknown): string {
-      return e instanceof Error ? e.message : String(e)
+      return toApiError(e).message
     }
 
     watch(slotId, () => {
@@ -673,7 +675,7 @@ export default defineComponent({
         const mj = maxJobsFromStage3Payload(card.stage_3.payload)
         stage3MaxJobs.value = mj ?? STAGE3_DEFAULT_MAX_JOBS
       },
-      { immediate: true },
+      { immediate: true }
     )
 
     watch(
@@ -685,7 +687,7 @@ export default defineComponent({
           void refreshSlotCard()
         }, SLOT_POLL_MS)
       },
-      { immediate: true },
+      { immediate: true }
     )
 
     watch(anyStageRunning, (running, wasRunning) => {
@@ -700,7 +702,7 @@ export default defineComponent({
         if (prev === "running" && (state === "succeeded" || state === "failed")) {
           void refreshAllStageJobLists()
         }
-      },
+      }
     )
 
     onUnmounted(() => {

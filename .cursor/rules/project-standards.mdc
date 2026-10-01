@@ -1,0 +1,55 @@
+---
+description: Coding standards and API envelope rules for the JobHound frontend.
+globs: **/*.{ts,vue,js,scss}
+alwaysApply: true
+---
+
+# Project Architecture & Standards
+
+Nuxt 4 under `app/`. Job search UI: searches, slot details, profile.
+
+## Directory structure
+
+- **`app/pages/`** — route UI. Calls `app/api`. `catch (e: unknown)`, then `toApiError`.
+- **`app/components/`** — presentational. No fetch.
+- **`app/api/`** — `apiFetch`, `readApiJson` / `throwIfNotOk`, named functions. Return unwrapped `Promise<T>`.
+- **`app/store/`** — Pinia setup stores. Call API functions; do not parse the envelope.
+- **`app/types/`** — `I*` DTOs, envelope types in `IApiEnvelope.ts`, `ApiError`. Generated codes in `types/generated/apiErrorCodes.ts`.
+- **`app/utils/`** — `unwrapApiResult`, `toApiError`.
+
+## Vue 3 & TypeScript
+
+- Composition API (`<script setup>`).
+- Components: **PascalCase**. Composables: `use*` camelCase.
+- Interfaces: **PascalCase** with `I` prefix. Enums: **PascalCase** + `Enum` suffix.
+- Strict typing. `unknown` in catch. Explicit API return types.
+- Named exports. Barrel `index.ts` per directory.
+- Quotes: double `"`. No semicolons unless required.
+
+## API envelope
+
+Backend contract is `{ ok: true, result }` or `{ ok: false, error }`. Discriminator is `ok`.
+
+- JSON success: `readApiJson` → `unwrapApiResult`. Handlers stay `Promise<T>`.
+- HTTP failure: `throwIfNotOk` / `readApiJson` → `toApiError`.
+- `204` / empty / non-JSON success stay unwrapped (`undefined`).
+- Pages and stores do not read `ok`, `response.data`, or a raw `error` object from JSON.
+- Do not parse `{ error: { code, message } }` without `ok`.
+- Do not read legacy shapes: root `data.code`, `data.fieldErrors`, `error` as a string, sibling `limit` on the error body. Slot cap is `error.meta.limit`.
+- `const error = toApiError(e)`. Show `error.message`. Map fields as `` `${field.name}: ${field.message}` ``.
+- Branch on `error.code` only when behavior differs. Import `API_ERROR_CODES` from `~/types`. The only handwritten codes are `VALIDATION.FAILED` and `INTERNAL.UNEXPECTED` inside `toApiError`.
+- User-facing text for a known API error is the envelope `error.message`. Fallback copy is the English table in the frontend baseline contracts.
+- `apiFetch` sets `X-Correlation-ID`. Callers do not set it.
+
+```typescript
+export async function getFoo(): Promise<IFooResponse> {
+  const config = useRuntimeConfig()
+  const base = String(config.public.apiBaseUrl).replace(/\/$/, "")
+  const res = await apiFetch(`${base}/api/v1/foo`)
+  return readApiJson<IFooResponse>(res)
+}
+```
+
+## State (Pinia)
+
+Setup stores in `app/store/`. Actions call `app/api` and store the unwrapped DTO.

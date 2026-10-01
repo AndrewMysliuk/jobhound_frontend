@@ -6,9 +6,11 @@
 </template>
 
 <script lang="ts">
-import "vue-sonner/style.css"
 import { defineComponent } from "vue"
+
 import { TheHeader } from "./components"
+
+import "vue-sonner/style.css"
 
 export default defineComponent({
   components: {

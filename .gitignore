@@ -2,6 +2,7 @@ node_modules
 .nuxt
 .output
 dist
+*.tsbuildinfo
 *.log
 .DS_Store
 .env

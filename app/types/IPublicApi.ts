@@ -54,13 +54,7 @@ export const DefaultJobListLimit = 50
 export const MaxJobListLimit = 100
 
 /** Allowed `?status=` values for stages 2–3 (`get_stage_jobs.go`). */
-export type IJobListStatusFilter =
-  | "ELIGIBLE_STAGE_2"
-  | "PASSED_STAGE_2"
-  | "REJECTED_STAGE_2"
-  | "UNKNOWN_STAGE_2"
-  | "PASSED_STAGE_3"
-  | "REJECTED_STAGE_3"
+export type IJobListStatusFilter = "ELIGIBLE_STAGE_2" | "PASSED_STAGE_2" | "REJECTED_STAGE_2" | "UNKNOWN_STAGE_2" | "PASSED_STAGE_3" | "REJECTED_STAGE_3"
 
 export interface IJobListItem {
   job_id: string
@@ -92,7 +86,7 @@ export interface IGetStageJobsQuery {
   page?: number
   limit?: number
   /** Only for stages 2 and 3. */
-  status?: IJobListStatusFilter | string
+  status?: IJobListStatusFilter
 }
 
 export interface IStage2Rule {

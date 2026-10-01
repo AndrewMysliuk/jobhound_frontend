@@ -19,11 +19,7 @@
       </div>
     </div>
 
-    <div
-      v-if="showPagination"
-      class="flex flex-col items-center justify-between border-t border-border sm:flex-row"
-      :class="[footerPaddingClass, footerGapClass]"
-    >
+    <div v-if="showPagination" class="flex flex-col items-center justify-between border-t border-border sm:flex-row" :class="[footerPaddingClass, footerGapClass]">
       <div :class="summaryTextClass">Page {{ page }} · {{ pageSize }} per page · Total {{ total }}</div>
       <div class="flex items-center gap-2">
         <button type="button" :class="navButtonClasses(prevDisabled)" :disabled="prevDisabled" @click="emit('prev')">Previous</button>
@@ -73,7 +69,7 @@ export default defineComponent({
     function navButtonClasses(disabled: boolean) {
       const sizing = props.density === "compact" ? "px-3 py-1.5 text-xs" : "px-4 py-2 text-sm"
       const base = `font-medium bg-white border border-border rounded-lg ${sizing}`
-      return disabled ? `${base} text-secondary opacity-50 cursor-not-allowed` : `${base} text-primary transition-colors duration-200 hover:bg-rowHover`
+      return disabled ? `${base} text-secondary opacity-50 cursor-not-allowed` : `${base} text-primary transition-colors duration-200 hover:bg-row-hover`
     }
 
     return {

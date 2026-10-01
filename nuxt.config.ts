@@ -1,3 +1,5 @@
+import tailwindcss from "@tailwindcss/vite"
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
@@ -10,9 +12,23 @@ export default defineNuxtConfig({
 
   ssr: true,
 
-  css: ["~/assets/scss/main.scss"],
+  css: [
+    "@fontsource/inter/latin-400.css",
+    "@fontsource/inter/latin-500.css",
+    "@fontsource/inter/latin-600.css",
+    "@fontsource/inter/latin-700.css",
+    "~/assets/css/tailwind.css",
+    "~/assets/scss/main.scss",
+  ],
 
-  modules: ["@nuxtjs/tailwindcss", "@pinia/nuxt"],
+  vite: {
+    plugins: [tailwindcss()],
+    build: {
+      cssMinify: "lightningcss",
+    },
+  },
+
+  modules: ["@pinia/nuxt"],
 
   components: false,
 
@@ -34,20 +50,7 @@ export default defineNuxtConfig({
 
         { name: "mobile-web-app-capable", content: "yes" },
       ],
-      link: [
-        { rel: "preconnect", href: "https://fonts.googleapis.com" },
-        {
-          rel: "preconnect",
-          href: "https://fonts.gstatic.com",
-          crossorigin: "anonymous",
-        },
-
-        { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
-        {
-          rel: "stylesheet",
-          href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap",
-        },
-      ],
+      link: [{ rel: "icon", type: "image/x-icon", href: "/favicon.ico" }],
       script: [],
       noscript: [],
     },

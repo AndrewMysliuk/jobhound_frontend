@@ -1,7 +1,7 @@
 <template>
   <Teleport to="body">
     <div v-if="modelValue" id="modal-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 px-4" role="presentation" @click.self="onBackdropClick">
-      <div :id="panelId" class="w-full rounded-lg border border-border bg-cardBg p-6 shadow-lg sm:p-8" :class="maxWidthClass" role="dialog" aria-modal="true" @click.stop>
+      <div :id="panelId" class="w-full rounded-lg border border-border bg-card-bg p-6 shadow-lg sm:p-8" :class="maxWidthClass" role="dialog" aria-modal="true" @click.stop>
         <slot />
       </div>
     </div>
@@ -40,7 +40,7 @@ export default defineComponent({
           window.addEventListener("keydown", escHandler)
         }
       },
-      { immediate: true },
+      { immediate: true }
     )
 
     onUnmounted(() => {

@@ -15,7 +15,7 @@
           <button
             id="new-search-btn"
             type="button"
-            class="rounded-lg bg-btnPrimary py-2 px-5 text-sm font-medium text-btnText shadow-sm transition-colors duration-200 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-btnPrimary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            class="rounded-lg bg-btn-primary py-2 px-5 text-sm font-medium text-btn-text shadow-sm transition-colors duration-200 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-btn-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             :disabled="slotsList.length >= 3 || isCreating"
             @click="onCreateSearch"
           >
@@ -26,7 +26,7 @@
         <p id="helper-text" class="mb-6 text-sm text-secondary">Up to 3 active searches.</p>
 
         <div id="slots-list" class="flex flex-col gap-3">
-          <div v-for="item in slotsList" :id="'slot-card-' + item.id" :key="item.id" class="slot-card flex items-start justify-between rounded-lg border border-border bg-cardBg p-5">
+          <div v-for="item in slotsList" :id="'slot-card-' + item.id" :key="item.id" class="slot-card flex items-start justify-between rounded-lg border border-border bg-card-bg p-5">
             <NuxtLink :to="{ path: '/slots-details', query: { slot: item.id } }" class="min-w-0 flex-grow no-underline">
               <h2 class="mb-1 truncate text-base font-medium text-primary">{{ item.name }}</h2>
               <p class="text-sm text-secondary">{{ formatIsoRelativeLabel(item.created_at, "Created") }}</p>
@@ -54,7 +54,7 @@
         <button
           id="new-search-btn"
           type="button"
-          class="rounded-lg bg-btnPrimary py-2.5 px-6 font-medium text-btnText shadow-sm transition-colors duration-200 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-btnPrimary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          class="rounded-lg bg-btn-primary py-2.5 px-6 font-medium text-btn-text shadow-sm transition-colors duration-200 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-btn-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           :disabled="slotsList.length >= 3 || isCreating"
           @click="onCreateSearch"
         >
@@ -66,12 +66,11 @@
 </template>
 
 <script lang="ts">
-import { v4 as uuidv4 } from "uuid"
 import { computed, defineComponent, ref } from "vue"
+import { v4 as uuidv4 } from "uuid"
 
 import { deleteSlot, getSlots, postSlots } from "~/api/publicApi"
-import { formatIsoRelativeLabel } from "~/utils"
-import { ApiError } from "~/types"
+import { formatIsoRelativeLabel, toApiError } from "~/utils"
 
 function nextSearchName(existing: { name: string }[]): string {
   const used = new Set(existing.map((s) => s.name))
@@ -93,7 +92,7 @@ export default defineComponent({
     const loadError = computed(() => {
       const e = error.value
       if (!e) return null
-      return e instanceof Error ? e.message : String(e)
+      return toApiError(e).message
     })
 
     const mainVerticalClass = computed(() => {
@@ -114,8 +113,8 @@ export default defineComponent({
         const created = await postSlots(nextSearchName(slotsList.value), uuidv4())
         await refresh()
         await navigateTo({ path: "/slots-details", query: { slot: created.id } })
-      } catch (e) {
-        createError.value = e instanceof ApiError ? e.message : "Failed to create search"
+      } catch (e: unknown) {
+        createError.value = toApiError(e).message
       } finally {
         isCreating.value = false
       }
@@ -127,8 +126,8 @@ export default defineComponent({
       try {
         await deleteSlot(id)
         await refresh()
-      } catch (e) {
-        deleteError.value = e instanceof ApiError ? e.message : "Failed to delete search"
+      } catch (e: unknown) {
+        deleteError.value = toApiError(e).message
       } finally {
         deletingId.value = null
       }

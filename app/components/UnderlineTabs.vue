@@ -15,7 +15,7 @@
           @click="select(index)"
         >
           {{ label }}
-          <span v-if="modelValue === index" class="absolute bottom-0 left-0 right-0 h-0.5 bg-btnPrimary" aria-hidden="true" />
+          <span v-if="modelValue === index" class="absolute bottom-0 left-0 right-0 h-0.5 bg-btn-primary" aria-hidden="true" />
         </button>
       </nav>
     </div>
@@ -69,7 +69,7 @@ export default defineComponent({
     function tabButtonClass(index: number) {
       const base = "relative pb-4 px-1 text-sm font-medium transition-colors duration-200"
       const active = props.modelValue === index
-      return active ? `${base} text-btnPrimary` : `${base} text-link hover:text-linkHover`
+      return active ? `${base} text-btn-primary` : `${base} text-link hover:text-link-hover`
     }
 
     function select(index: number) {

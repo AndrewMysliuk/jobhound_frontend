@@ -3,7 +3,7 @@
     <div id="profile-container" class="w-full max-w-[720px]">
       <h1 id="page-title" class="mb-8 text-2xl font-semibold tracking-tight text-primary sm:text-3xl">Profile</h1>
 
-      <div id="profile-card" class="rounded-lg border border-border bg-cardBg p-6 sm:p-8">
+      <div id="profile-card" class="rounded-lg border border-border bg-card-bg p-6 sm:p-8">
         <div id="profile-content" class="mb-6">
           <div v-if="isLoading" class="text-sm text-secondary">Loading…</div>
           <div v-else-if="loadError" class="text-sm text-destructive">{{ loadError }}</div>
@@ -24,7 +24,7 @@
           <button
             id="edit-profile-btn"
             type="button"
-            class="self-start rounded-lg bg-btnPrimary py-2.5 px-6 font-medium text-btnText shadow-sm transition-colors duration-200 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-btnPrimary focus:ring-offset-2 enabled:cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 sm:self-auto"
+            class="self-start rounded-lg bg-btn-primary py-2.5 px-6 font-medium text-btn-text shadow-sm transition-colors duration-200 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-btn-primary focus:ring-offset-2 enabled:cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 sm:self-auto"
             :disabled="isLoading"
             @click="openEditModal"
           >
@@ -39,13 +39,13 @@
 
       <p id="modal-helper" class="mb-6 text-sm text-secondary">Paste or edit your profile</p>
 
-      <div v-if="saveError" class="mb-4 text-sm text-destructive">{{ saveError }}</div>
+      <div v-if="saveError" class="mb-4 whitespace-pre-line text-sm text-destructive">{{ saveError }}</div>
 
       <div id="textarea-container" class="mb-6">
         <textarea
           id="profile-textarea"
           v-model="profileDraft"
-          class="min-h-[220px] w-full resize-y rounded-lg border border-border bg-cardBg p-4 text-base leading-relaxed text-primary focus:border-transparent focus:outline-none focus:ring-2 focus:ring-btnPrimary"
+          class="min-h-[220px] w-full resize-y rounded-lg border border-border bg-card-bg p-4 text-base leading-relaxed text-primary focus:border-transparent focus:outline-none focus:ring-2 focus:ring-btn-primary"
           :placeholder="profileTextareaPlaceholder"
           :disabled="isSaving"
         />
@@ -55,7 +55,7 @@
         <button
           id="cancel-btn"
           type="button"
-          class="w-full rounded-lg border border-border py-2.5 px-6 font-medium text-link transition-colors duration-200 hover:bg-page hover:text-linkHover focus:outline-none focus:ring-2 focus:ring-border focus:ring-offset-2 enabled:cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+          class="w-full rounded-lg border border-border py-2.5 px-6 font-medium text-link transition-colors duration-200 hover:bg-page hover:text-link-hover focus:outline-none focus:ring-2 focus:ring-border focus:ring-offset-2 enabled:cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
           :disabled="isSaving"
           @click="isEditModalOpen = false"
         >
@@ -65,7 +65,7 @@
         <button
           id="save-btn"
           type="button"
-          class="w-full rounded-lg bg-btnPrimary py-2.5 px-6 font-medium text-btnText shadow-sm transition-colors duration-200 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-btnPrimary focus:ring-offset-2 enabled:cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+          class="w-full rounded-lg bg-btn-primary py-2.5 px-6 font-medium text-btn-text shadow-sm transition-colors duration-200 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-btn-primary focus:ring-offset-2 enabled:cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
           :disabled="isSaving"
           @click="onSaveProfile"
         >
@@ -80,7 +80,7 @@
 import { computed, defineComponent, ref } from "vue"
 
 import { getProfile, putProfile } from "~/api/publicApi"
-import { ApiError } from "~/types"
+import { toApiError } from "~/utils"
 
 import { BaseModal } from "../components"
 
@@ -102,7 +102,7 @@ export default defineComponent({
     const loadError = computed(() => {
       const e = error.value
       if (!e) return null
-      return e instanceof Error ? e.message : String(e)
+      return toApiError(e).message
     })
 
     const profileLines = computed(() => {
@@ -132,8 +132,15 @@ export default defineComponent({
         const updated = await putProfile({ text: profileDraft.value })
         profile.value = updated
         isEditModalOpen.value = false
-      } catch (e) {
-        saveError.value = e instanceof ApiError ? e.message : "Failed to save profile"
+      } catch (e: unknown) {
+        const apiError = toApiError(e)
+        const lines = [apiError.message]
+        if (apiError.fields.length > 0) {
+          for (const field of apiError.fields) {
+            lines.push(`${field.name}: ${field.message}`)
+          }
+        }
+        saveError.value = lines.join("\n")
       } finally {
         isSaving.value = false
       }

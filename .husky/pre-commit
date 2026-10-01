@@ -1,0 +1,5 @@
+pnpm typecheck
+pnpm lint-staged
+pnpm lint:eslint:strict
+pnpm check:api-error-codes
+pnpm check:api-response

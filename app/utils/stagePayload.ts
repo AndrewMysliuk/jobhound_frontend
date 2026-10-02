@@ -30,22 +30,22 @@ function cleanPhrases(lines: string[]): string[] {
 }
 
 /**
- * Reject a listing whose stated hiring region is outside `EUROPE_HIRING_OK` (Europe minus post-Soviet).
- * `when: "explicit"` keeps listings that state no region at all — those stay for manual review.
+ * Reject a listing whose stated hiring countries miss Europe-ok.
+ * A US tag is allowed: US-only is a visa or "must be located" line in exclude, not the country.
+ * `when: "explicit"` keeps listings that state no region at all.
  */
 const GEO_RULE: IStage2Rule = {
   id: "geo",
   field: "countries_allowed",
   op: "excludes",
-  values: ["EUROPE_HIRING_OK"],
+  values: ["EUROPE_HIRING_OK", "US"],
   action: "reject",
   when: "explicit",
 }
 
 /**
- * Exclude lines become one title phrase reject. Include lines become one phrase boost.
- * Exclusions are title-scoped on purpose: matching role and stack words in the description
- * rejected ~80% of good engineering listings on boilerplate like "our recruiter will contact you".
+ * Exclude lines become one listing phrase reject. Include lines become one listing phrase boost.
+ * Both search title, company, description, tags, hiring raw, and salary.
  */
 export function stage2RulesFromKeywords(include: string[], exclude: string[]): IStage2Rule[] {
   const rules: IStage2Rule[] = [GEO_RULE]
@@ -54,7 +54,7 @@ export function stage2RulesFromKeywords(include: string[], exclude: string[]): I
   if (excluded.length > 0) {
     rules.push({
       id: "exclude",
-      field: "title",
+      field: "listing",
       op: "phrase",
       values: excluded,
       action: "reject",
@@ -63,7 +63,7 @@ export function stage2RulesFromKeywords(include: string[], exclude: string[]): I
   if (included.length > 0) {
     rules.push({
       id: "include",
-      field: "title_body",
+      field: "listing",
       op: "phrase",
       values: included,
       action: "boost",

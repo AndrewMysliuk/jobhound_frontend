@@ -91,7 +91,7 @@ export interface IGetStageJobsQuery {
 
 export interface IStage2Rule {
   id: string
-  field: "title" | "body" | "title_body" | "countries_allowed" | "position"
+  field: "title" | "body" | "title_body" | "listing" | "countries_allowed" | "position"
   op: "phrase" | "any" | "excludes"
   values: string[]
   action: "reject" | "boost"

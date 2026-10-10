@@ -3,20 +3,19 @@
 // Codes are for behaviour branching only. User-facing text comes from the envelope's error.message.
 
 export const API_ERROR_CODES = {
-  HttpMethodNotAllowed: "HTTP.METHOD_NOT_ALLOWED",
   HttpInvalidJson: "HTTP.INVALID_JSON",
   HttpValidationFailed: "HTTP.VALIDATION_FAILED",
-  HttpInvalidStage: "HTTP.INVALID_STAGE",
   HttpInvalidQuery: "HTTP.INVALID_QUERY",
-  SlotsIdempotencyKeyRequired: "SLOTS.IDEMPOTENCY_KEY_REQUIRED",
-  SlotsInvalidIdempotencyKey: "SLOTS.INVALID_IDEMPOTENCY_KEY",
-  SlotsIdempotencyKeyConflict: "SLOTS.IDEMPOTENCY_KEY_CONFLICT",
-  SlotsLimitReached: "SLOTS.LIMIT_REACHED",
-  SlotsNotFound: "SLOTS.NOT_FOUND",
-  PipelineJobNotInScope: "PIPELINE.JOB_NOT_IN_SCOPE",
-  SlotsStageAlreadyRunning: "SLOTS.STAGE_ALREADY_RUNNING",
-  SlotsNoPipelineRun: "SLOTS.NO_PIPELINE_RUN",
-  SlotsProfileRequired: "SLOTS.PROFILE_REQUIRED",
+  HttpIdempotencyKeyRequired: "HTTP.IDEMPOTENCY_KEY_REQUIRED",
+  HttpInvalidIdempotencyKey: "HTTP.INVALID_IDEMPOTENCY_KEY",
+  HttpIdempotencyKeyConflict: "HTTP.IDEMPOTENCY_KEY_CONFLICT",
+  ProfilesNotFound: "PROFILES.NOT_FOUND",
+  ProfilesInvalidDefinition: "PROFILES.INVALID_DEFINITION",
+  ProfilesRunAlreadyRunning: "PROFILES.RUN_ALREADY_RUNNING",
+  ProfilesNoRun: "PROFILES.NO_RUN",
+  ProfilesJobNotInScope: "PROFILES.JOB_NOT_IN_SCOPE",
+  ProfilesInvalidUserStatus: "PROFILES.INVALID_USER_STATUS",
+  HttpMethodNotAllowed: "HTTP.METHOD_NOT_ALLOWED",
   InternalUnexpected: "INTERNAL.UNEXPECTED",
 } as const
 

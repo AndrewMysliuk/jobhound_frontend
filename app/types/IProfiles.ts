@@ -43,7 +43,7 @@ export interface IProfileJobLocation {
   raw: string
 }
 
-export type IProfileSignalCode = "QUERY" | "PENALTY" | "CUT_EXCLUDE_TITLE" | "CUT_EXCLUDE_TEXT"
+export type IProfileSignalCode = "QUERY" | "PENALTY" | "CUT_EXCLUDE_TITLE" | "CUT_EXCLUDE_TEXT" | "CUT_LOCATION"
 
 export interface IProfileSignal {
   code: IProfileSignalCode

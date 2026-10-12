@@ -43,12 +43,18 @@ export interface IProfileJobLocation {
   raw: string
 }
 
-export type IProfileSignalCode = "QUERY" | "PENALTY" | "CUT_EXCLUDE_TITLE" | "CUT_EXCLUDE_TEXT" | "CUT_LOCATION"
+export type IProfileSignalCode = "QUERY" | "PENALTY" | "CUT_EXCLUDE_TITLE" | "CUT_EXCLUDE_TEXT" | "CUT_LOCATION" | "CUT_POSTED_AT"
 
 export interface IProfileSignal {
   code: IProfileSignalCode
   points: number
   terms?: string[]
+}
+
+export interface IProfileJobOpening {
+  country: string
+  url: string
+  apply_url: string
 }
 
 export interface IProfileJob {
@@ -58,6 +64,7 @@ export interface IProfileJob {
   url: string
   apply_url: string
   location: IProfileJobLocation
+  openings: IProfileJobOpening[]
   sources: string[]
   posted_at: string | null
   first_seen_at: string

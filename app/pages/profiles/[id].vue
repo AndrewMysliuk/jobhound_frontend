@@ -29,8 +29,8 @@
 
             <div v-if="latestRun" class="flex flex-wrap gap-x-4 gap-y-1 text-sm text-primary">
               <span>Status {{ latestRun.status }}</span>
-              <span v-if="latestRun.jobs_scored != null">Jobs scored {{ latestRun.jobs_scored }}</span>
-              <span v-if="latestRun.sources_skipped != null">Sources skipped {{ latestRun.sources_skipped }}</span>
+              <span v-if="latestRun.jobs_scored != null">Parsed {{ latestRun.jobs_scored }} vacancies</span>
+              <span v-if="latestRun.sources_skipped != null">Skipped {{ latestRun.sources_skipped }} sources</span>
             </div>
             <p v-else-if="!latestErrorMessage" class="text-sm text-secondary">No run yet</p>
           </div>
@@ -55,9 +55,11 @@
           :navigation-disabled="jobsPending || patchingJobId != null"
           @prev="onPrev"
           @next="onNext"
+          @goto="onGoto"
         >
           <template #thead>
             <tr class="border-b border-border bg-table-header-bg">
+              <th class="w-12 px-3 py-3 text-right text-xs font-medium uppercase tracking-wider text-secondary">#</th>
               <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">Title</th>
               <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">Company</th>
               <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">Score</th>
@@ -71,48 +73,36 @@
             </tr>
           </template>
           <template #tbody>
-            <tr v-for="row in table.items" :key="row.job_id" class="align-top">
-              <td class="px-4 py-3 text-sm font-medium text-primary">
-                <a
-                  v-if="resolveApplyOrListingHref(row)"
-                  :href="resolveApplyOrListingHref(row)"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="text-link transition-colors duration-200 hover:text-link-hover hover:underline"
-                  >{{ row.title }}</a
-                >
-                <template v-else>{{ row.title }}</template>
-              </td>
+            <tr v-for="(row, index) in table.items" :key="row.job_id" class="align-top">
+              <td class="px-3 py-3 text-right text-sm tabular-nums text-secondary">{{ rowNumber(index) }}</td>
+              <td class="px-4 py-3 text-sm font-medium text-primary">{{ row.title }}</td>
               <td class="px-4 py-3 text-sm text-primary">{{ row.company }}</td>
               <td class="px-4 py-3 text-sm text-primary">{{ row.score }}</td>
               <td class="px-4 py-3 text-sm text-primary">{{ formatSources(row.sources) }}</td>
-              <td class="px-4 py-3 text-sm text-primary">{{ formatLocation(row.location.raw) }}</td>
+              <td class="px-4 py-3 text-sm">
+                <div class="flex flex-col divide-y divide-border">
+                  <a
+                    v-for="link in locationLinks(row.openings)"
+                    :key="link.key"
+                    :href="link.href"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="py-1.5 first:pt-0 last:pb-0"
+                    :class="linkActionClass"
+                  >
+                    {{ link.label }}
+                  </a>
+                </div>
+              </td>
               <td class="px-4 py-3 text-sm text-primary">{{ formatIsoLocalDateTimeMinutes(row.first_seen_at) }}</td>
               <td class="px-4 py-3 text-sm" :class="postedCellClass(row.posted_at)">{{ formatPosted(row.posted_at) }}</td>
               <td class="px-4 py-3 text-sm">
-                <button
-                  v-if="listView === 'hidden'"
-                  type="button"
-                  class="font-medium text-link transition-colors duration-200 hover:text-link-hover disabled:cursor-not-allowed disabled:opacity-50"
-                  :disabled="patchingJobId != null"
-                  @click="onSetStatus(row.job_id, 'NEW')"
-                >
-                  Unhide
-                </button>
-                <button
-                  v-else
-                  type="button"
-                  class="font-medium text-link transition-colors duration-200 hover:text-link-hover disabled:cursor-not-allowed disabled:opacity-50"
-                  :disabled="patchingJobId != null"
-                  @click="onSetStatus(row.job_id, 'HIDDEN')"
-                >
-                  Hide
-                </button>
+                <button v-if="listView === 'hidden'" type="button" :class="jobActionClass" :disabled="patchingJobId != null" @click="onSetStatus(row.job_id, 'NEW')">Unhide</button>
+                <button v-else type="button" :class="jobActionClass" :disabled="patchingJobId != null" @click="onSetStatus(row.job_id, 'HIDDEN')">Hide</button>
               </td>
             </tr>
           </template>
         </PaginatedDataTable>
-        <p v-if="jobsPending" class="mt-2 text-sm text-secondary">Updating…</p>
       </div>
     </div>
   </main>
@@ -122,7 +112,7 @@
 import { computed, defineComponent, onUnmounted, ref, watch } from "vue"
 
 import { getLatestProfileRun, getProfileJobs, patchProfileJob, postProfileRun } from "~/api/publicApi"
-import { API_ERROR_CODES, type IGetProfileJobsQuery, type IProfileUserStatus } from "~/types"
+import { API_ERROR_CODES, type IGetProfileJobsQuery, type IProfileJobOpening, type IProfileUserStatus } from "~/types"
 import { computedPaginatedTableSlice, formatIsoLocalDateTime, formatIsoLocalDateTimeMinutes, labelForSourceId, resolveApplyOrListingHref, toApiError } from "~/utils"
 
 import { PaginatedDataTable } from "../../components"
@@ -257,12 +247,23 @@ export default defineComponent({
       return `${base} border border-border bg-white text-primary hover:bg-row-hover`
     }
 
+    const linkActionClass = "cursor-pointer rounded-sm px-1 font-medium text-btn-primary transition-colors duration-200 hover:bg-blue-100 hover:text-blue-800 hover:underline"
+    const jobActionClass = `${linkActionClass} underline underline-offset-2 disabled:cursor-not-allowed disabled:opacity-50`
+
     function onPrev() {
       if (page.value > 1) page.value--
     }
 
     function onNext() {
       if (table.value.canNext) page.value++
+    }
+
+    function onGoto(nextPage: number) {
+      if (jobsPending.value || patchingJobId.value != null) return
+      if (nextPage < 1 || nextPage === page.value) return
+      const last = table.value.total === 0 ? 1 : Math.ceil(table.value.total / pageSize)
+      if (nextPage > last) return
+      page.value = nextPage
     }
 
     async function onRun() {
@@ -298,14 +299,32 @@ export default defineComponent({
       }
     }
 
+    function rowNumber(index: number) {
+      return (table.value.pageShown - 1) * pageSize + index + 1
+    }
+
     function formatSources(sources: string[]) {
       if (sources.length === 0) return "—"
       return sources.map((sourceId) => labelForSourceId(sourceId)).join(", ")
     }
 
-    function formatLocation(raw: string) {
-      const value = raw.trim()
-      return value === "" ? "—" : value
+    function locationLinks(openings: IProfileJobOpening[] | undefined) {
+      const links: { key: string; href: string; label: string }[] = []
+      for (const [i, opening] of (openings ?? []).entries()) {
+        const href = resolveApplyOrListingHref(opening)
+        if (href === "") continue
+        const country = opening.country.trim()
+        links.push({
+          key: `${i}:${href}`,
+          href,
+          label: country === "" ? "Link" : country,
+        })
+      }
+      if (links.length < 2) return links
+      return links.map((link, index) => ({
+        ...link,
+        label: `${index + 1}. ${link.label}`,
+      }))
     }
 
     function postedCellClass(posted: string | null) {
@@ -368,15 +387,18 @@ export default defineComponent({
       table,
       pageSize,
       patchingJobId,
+      linkActionClass,
+      jobActionClass,
       onPrev,
       onNext,
+      onGoto,
       onSetStatus,
+      rowNumber,
       formatSources,
-      formatLocation,
+      locationLinks,
       postedCellClass,
       formatPosted,
       formatIsoLocalDateTimeMinutes,
-      resolveApplyOrListingHref,
     }
   },
 })

@@ -29,7 +29,7 @@ export interface IProfileRun {
   sources_skipped?: number
 }
 
-export type IProfileJobBucket = "PASSED" | "REJECTED"
+export type IProfileJobBucket = "TOP" | "REVIEW" | "REJECTED"
 
 export type IProfileUserStatus = "NEW" | "HIDDEN"
 
@@ -43,12 +43,14 @@ export interface IProfileJobLocation {
   raw: string
 }
 
-export type IProfileSignalCode = "QUERY" | "PENALTY" | "CUT_EXCLUDE_TITLE" | "CUT_EXCLUDE_TEXT" | "CUT_LOCATION" | "CUT_POSTED_AT"
+export type IProfileSignalCode = "GATE_ROLE" | "GATE_HARD" | "CUT_LOCATION" | "CUT_TIMEZONE" | "CUT_POSTED_AT" | "PLUS" | "PENALTY"
 
 export interface IProfileSignal {
   code: IProfileSignalCode
-  points: number
-  terms?: string[]
+  rule: string
+  phrase?: string
+  delta: number
+  occurrences?: number
 }
 
 export interface IProfileJobOpening {

@@ -37,8 +37,9 @@
         </div>
 
         <div class="mb-4 flex flex-wrap gap-2">
-          <button type="button" :class="listButtonClass('default')" @click="selectList('default')">Passed</button>
-          <button type="button" :class="listButtonClass('rejected')" @click="selectList('rejected')">Rejected</button>
+          <button type="button" :class="listButtonClass('TOP')" @click="selectList('TOP')">Top</button>
+          <button type="button" :class="listButtonClass('REVIEW')" @click="selectList('REVIEW')">Review</button>
+          <button type="button" :class="listButtonClass('REJECTED')" @click="selectList('REJECTED')">Rejected</button>
           <button type="button" :class="listButtonClass('hidden')" @click="selectList('hidden')">Hidden</button>
         </div>
 
@@ -80,7 +81,8 @@
               <td class="px-4 py-3 text-sm text-primary">{{ row.score }}</td>
               <td class="px-4 py-3 text-sm text-primary">{{ formatSources(row.sources) }}</td>
               <td class="px-4 py-3 text-sm">
-                <div class="flex flex-col divide-y divide-border">
+                <span v-if="!hasKnownLocation(row.location)" class="text-secondary">—</span>
+                <div v-else-if="locationLinks(row.openings).length > 0" class="flex flex-col divide-y divide-border">
                   <a
                     v-for="link in locationLinks(row.openings)"
                     :key="link.key"
@@ -93,6 +95,7 @@
                     {{ link.label }}
                   </a>
                 </div>
+                <span v-else class="text-primary">{{ formatLocation(row.location) }}</span>
               </td>
               <td class="px-4 py-3 text-sm text-primary">{{ formatIsoLocalDateTimeMinutes(row.first_seen_at) }}</td>
               <td class="px-4 py-3 text-sm" :class="postedCellClass(row.posted_at)">{{ formatPosted(row.posted_at) }}</td>
@@ -112,7 +115,7 @@
 import { computed, defineComponent, onUnmounted, ref, watch } from "vue"
 
 import { getLatestProfileRun, getProfileJobs, patchProfileJob, postProfileRun } from "~/api/publicApi"
-import { API_ERROR_CODES, type IGetProfileJobsQuery, type IProfileJobOpening, type IProfileUserStatus } from "~/types"
+import { API_ERROR_CODES, type IGetProfileJobsQuery, type IProfileJobBucket, type IProfileJobLocation, type IProfileJobOpening, type IProfileUserStatus } from "~/types"
 import { computedPaginatedTableSlice, formatIsoLocalDateTime, formatIsoLocalDateTimeMinutes, labelForSourceId, resolveApplyOrListingHref, toApiError } from "~/utils"
 
 import { PaginatedDataTable } from "../../components"
@@ -120,7 +123,7 @@ import { PaginatedDataTable } from "../../components"
 const PAGE_SIZE = 50
 const RUN_POLL_MS = 2500
 
-type ProfileListView = "default" | "rejected" | "hidden"
+type ProfileListView = IProfileJobBucket | "hidden"
 
 export default defineComponent({
   name: "ProfilePage",
@@ -138,7 +141,7 @@ export default defineComponent({
       return typeof value === "string" ? value : ""
     })
 
-    const listView = ref<ProfileListView>("default")
+    const listView = ref<ProfileListView>("TOP")
     const page = ref(1)
     const pageSize = PAGE_SIZE
     const actionError = ref<string | null>(null)
@@ -220,8 +223,11 @@ export default defineComponent({
 
     function jobsQuery(): IGetProfileJobsQuery {
       const query: IGetProfileJobsQuery = { page: page.value, limit: pageSize }
-      if (listView.value === "rejected") query.bucket = "REJECTED"
-      if (listView.value === "hidden") query.user_status = "HIDDEN"
+      if (listView.value === "hidden") {
+        query.user_status = "HIDDEN"
+        return query
+      }
+      query.bucket = listView.value
       return query
     }
 
@@ -308,6 +314,20 @@ export default defineComponent({
       return sources.map((sourceId) => labelForSourceId(sourceId)).join(", ")
     }
 
+    function locationParts(location: IProfileJobLocation | undefined): string[] {
+      const countries = location?.countries ?? []
+      const regions = location?.regions ?? []
+      return [...countries, ...regions].map((part) => part.trim()).filter((part) => part !== "")
+    }
+
+    function hasKnownLocation(location: IProfileJobLocation | undefined): boolean {
+      return locationParts(location).length > 0
+    }
+
+    function formatLocation(location: IProfileJobLocation | undefined): string {
+      return locationParts(location).join(", ")
+    }
+
     function locationLinks(openings: IProfileJobOpening[] | undefined) {
       const links: { key: string; href: string; label: string }[] = []
       for (const [i, opening] of (openings ?? []).entries()) {
@@ -345,7 +365,7 @@ export default defineComponent({
 
     watch(profileId, () => {
       page.value = 1
-      listView.value = "default"
+      listView.value = "TOP"
       actionError.value = null
     })
 
@@ -395,6 +415,8 @@ export default defineComponent({
       onSetStatus,
       rowNumber,
       formatSources,
+      hasKnownLocation,
+      formatLocation,
       locationLinks,
       postedCellClass,
       formatPosted,

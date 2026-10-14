@@ -81,17 +81,9 @@
               <td class="px-4 py-3 text-sm text-primary">{{ row.score }}</td>
               <td class="px-4 py-3 text-sm text-primary">{{ formatSources(row.sources) }}</td>
               <td class="px-4 py-3 text-sm">
-                <span v-if="!hasKnownLocation(row.location)" class="text-secondary">—</span>
-                <div v-else-if="locationLinks(row.openings).length > 0" class="flex flex-col divide-y divide-border">
-                  <a
-                    v-for="link in locationLinks(row.openings)"
-                    :key="link.key"
-                    :href="link.href"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="py-1.5 first:pt-0 last:pb-0"
-                    :class="linkActionClass"
-                  >
+                <span v-if="locationLinks(row).length === 0 && !hasKnownLocation(row.location)" class="text-secondary">—</span>
+                <div v-else-if="locationLinks(row).length > 0" class="flex flex-col divide-y divide-border">
+                  <a v-for="link in locationLinks(row)" :key="link.key" :href="link.href" target="_blank" rel="noopener noreferrer" class="py-1.5 first:pt-0 last:pb-0" :class="linkActionClass">
                     {{ link.label }}
                   </a>
                 </div>
@@ -115,7 +107,7 @@
 import { computed, defineComponent, onUnmounted, ref, watch } from "vue"
 
 import { getLatestProfileRun, getProfileJobs, patchProfileJob, postProfileRun } from "~/api/publicApi"
-import { API_ERROR_CODES, type IGetProfileJobsQuery, type IProfileJobBucket, type IProfileJobLocation, type IProfileJobOpening, type IProfileUserStatus } from "~/types"
+import { API_ERROR_CODES, type IGetProfileJobsQuery, type IProfileJob, type IProfileJobBucket, type IProfileJobLocation, type IProfileUserStatus } from "~/types"
 import { computedPaginatedTableSlice, formatIsoLocalDateTime, formatIsoLocalDateTimeMinutes, labelForSourceId, resolveApplyOrListingHref, toApiError } from "~/utils"
 
 import { PaginatedDataTable } from "../../components"
@@ -328,9 +320,9 @@ export default defineComponent({
       return locationParts(location).join(", ")
     }
 
-    function locationLinks(openings: IProfileJobOpening[] | undefined) {
+    function locationLinks(row: IProfileJob) {
       const links: { key: string; href: string; label: string }[] = []
-      for (const [i, opening] of (openings ?? []).entries()) {
+      for (const [i, opening] of (row.openings ?? []).entries()) {
         const href = resolveApplyOrListingHref(opening)
         if (href === "") continue
         const country = opening.country.trim()
@@ -339,6 +331,12 @@ export default defineComponent({
           href,
           label: country === "" ? "Link" : country,
         })
+      }
+      if (links.length === 0) {
+        const href = resolveApplyOrListingHref(row)
+        if (href !== "") {
+          links.push({ key: `job:${href}`, href, label: "Link" })
+        }
       }
       if (links.length < 2) return links
       return links.map((link, index) => ({

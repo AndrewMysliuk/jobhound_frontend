@@ -43,12 +43,13 @@ export interface IProfileJobLocation {
   raw: string
 }
 
-export type IProfileSignalCode = "GATE_ROLE" | "GATE_HARD" | "CUT_LOCATION" | "CUT_TIMEZONE" | "CUT_POSTED_AT" | "PLUS" | "PENALTY"
+export type IProfileSignalCode = "GATE_ROLE" | "GATE_HARD" | "CUT_LOCATION" | "CUT_TIMEZONE" | "CUT_POSTED_AT" | "PLUS" | "PENALTY" | "LLM" | "CONFLICT"
 
 export interface IProfileSignal {
   code: IProfileSignalCode
   rule: string
   phrase?: string
+  value?: string
   delta: number
   occurrences?: number
 }
@@ -58,6 +59,8 @@ export interface IProfileJobOpening {
   url: string
   apply_url: string
 }
+
+export type IProfileFactsStatus = "off" | "pending" | "ready"
 
 export interface IProfileJob {
   job_id: string
@@ -75,6 +78,7 @@ export interface IProfileJob {
   score: number
   signals: IProfileSignal[]
   user_status: IProfileUserStatus
+  facts_status: IProfileFactsStatus
 }
 
 export interface IProfileJobPage {

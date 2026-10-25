@@ -79,7 +79,15 @@
               <td class="px-4 py-3 text-sm font-medium text-primary">{{ row.title }}</td>
               <td class="px-4 py-3 text-sm text-primary">{{ row.company }}</td>
               <td class="px-4 py-3 text-sm text-primary">{{ row.score }}</td>
-              <td class="px-4 py-3 text-sm text-primary">{{ formatSources(row.sources) }}</td>
+              <td class="px-4 py-3 text-sm">
+                <span v-if="sourceLinks(row).length === 0" class="text-secondary">—</span>
+                <div v-else class="flex flex-col divide-y divide-border">
+                  <template v-for="link in sourceLinks(row)" :key="link.key">
+                    <a v-if="link.href" :href="link.href" target="_blank" rel="noopener noreferrer" class="py-1.5 first:pt-0 last:pb-0" :class="linkActionClass">{{ link.label }}</a>
+                    <span v-else class="py-1.5 first:pt-0 last:pb-0 text-primary">{{ link.label }}</span>
+                  </template>
+                </div>
+              </td>
               <td class="px-4 py-3 text-sm">
                 <span v-if="locationLinks(row).length === 0 && !hasKnownLocation(row.location)" class="text-secondary">—</span>
                 <div v-else-if="locationLinks(row).length > 0" class="flex flex-col divide-y divide-border">
@@ -108,7 +116,7 @@ import { computed, defineComponent, onUnmounted, ref, watch } from "vue"
 
 import { getLatestProfileRun, getProfileJobs, patchProfileJob, postProfileRun } from "~/api/publicApi"
 import { API_ERROR_CODES, type IGetProfileJobsQuery, type IProfileJob, type IProfileJobBucket, type IProfileJobLocation, type IProfileUserStatus } from "~/types"
-import { computedPaginatedTableSlice, formatIsoLocalDateTime, formatIsoLocalDateTimeMinutes, labelForSourceId, resolveApplyOrListingHref, toApiError } from "~/utils"
+import { computedPaginatedTableSlice, formatIsoLocalDateTime, formatIsoLocalDateTimeMinutes, labelForSourceId, resolveApplyHref, resolveListingHref, toApiError } from "~/utils"
 
 import { PaginatedDataTable } from "../../components"
 
@@ -301,11 +309,6 @@ export default defineComponent({
       return (table.value.pageShown - 1) * pageSize + index + 1
     }
 
-    function formatSources(sources: string[]) {
-      if (sources.length === 0) return "—"
-      return sources.map((sourceId) => labelForSourceId(sourceId)).join(", ")
-    }
-
     function locationParts(location: IProfileJobLocation | undefined): string[] {
       const countries = location?.countries ?? []
       const regions = location?.regions ?? []
@@ -320,22 +323,42 @@ export default defineComponent({
       return locationParts(location).join(", ")
     }
 
+    function sourceLinks(row: IProfileJob) {
+      const listing = resolveListingHref(row)
+      const sources = row.sources ?? []
+      if (sources.length === 0) {
+        if (listing === "") return []
+        return [{ key: `job:${listing}`, href: listing, label: "Link" }]
+      }
+      const links = sources.map((sourceId, i) => ({
+        key: `${i}:${sourceId}`,
+        href: listing,
+        label: labelForSourceId(sourceId),
+      }))
+      if (links.length < 2) return links
+      return links.map((link, index) => ({
+        ...link,
+        label: `${index + 1}. ${link.label}`,
+      }))
+    }
+
     function locationLinks(row: IProfileJob) {
       const links: { key: string; href: string; label: string }[] = []
       for (const [i, opening] of (row.openings ?? []).entries()) {
-        const href = resolveApplyOrListingHref(opening)
+        const href = resolveApplyHref(opening)
         if (href === "") continue
         const country = opening.country.trim()
         links.push({
           key: `${i}:${href}`,
           href,
-          label: country === "" ? "Link" : country,
+          label: country === "" ? "Apply" : country,
         })
       }
       if (links.length === 0) {
-        const href = resolveApplyOrListingHref(row)
+        const href = resolveApplyHref(row)
         if (href !== "") {
-          links.push({ key: `job:${href}`, href, label: "Link" })
+          const label = hasKnownLocation(row.location) ? formatLocation(row.location) : "Apply"
+          links.push({ key: `job:${href}`, href, label })
         }
       }
       if (links.length < 2) return links
@@ -412,7 +435,7 @@ export default defineComponent({
       onGoto,
       onSetStatus,
       rowNumber,
-      formatSources,
+      sourceLinks,
       hasKnownLocation,
       formatLocation,
       locationLinks,

@@ -46,20 +46,31 @@ export function recruiteeCareersUrlFromApply(raw: string): string {
   }
 }
 
-/**
- * Prefer direct apply when it is not a stale-prone Recruitee deep link.
- * Recruitee offer slugs rot; listing (aggregator) or careers index is more reliable for old rows.
- */
-export function resolveApplyOrListingHref(row: ApplyOrListingRow): string {
-  const listing = (row.url ?? "").trim()
-  const apply = normalizeApplyUrl(row.apply_url ?? "")
+/** Aggregator / source listing page (where the vacancy was seen). */
+export function resolveListingHref(row: ApplyOrListingRow): string {
+  return (row.url ?? "").trim()
+}
 
-  if (apply !== "" && isRecruiteeHref(apply)) {
-    if (listing !== "") return listing
+/**
+ * Direct apply when present. Recruitee deep links rot — prefer careers index.
+ * Empty when there is no apply (caller should not fall back to listing).
+ */
+export function resolveApplyHref(row: ApplyOrListingRow): string {
+  const apply = normalizeApplyUrl(row.apply_url ?? "")
+  if (apply === "") return ""
+  if (isRecruiteeHref(apply)) {
     const careers = recruiteeCareersUrlFromApply(apply)
     if (careers !== "") return careers
   }
+  return apply
+}
 
+/**
+ * Prefer apply when present; else listing.
+ * Recruitee: careers (or listing) instead of a stale /o/{slug}/c/new deep link.
+ */
+export function resolveApplyOrListingHref(row: ApplyOrListingRow): string {
+  const apply = resolveApplyHref(row)
   if (apply !== "") return apply
-  return listing
+  return resolveListingHref(row)
 }
